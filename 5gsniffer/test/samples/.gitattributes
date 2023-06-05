@@ -1,0 +1,2 @@
+*.32fc filter=lfs diff=lfs merge=lfs -text
+*.fc32 filter=lfs diff=lfs merge=lfs -text

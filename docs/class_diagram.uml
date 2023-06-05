@@ -1,0 +1,194 @@
+@startuml
+
+class Sniffer {
+    Main application
+    ..
+    SDR sdr
+    PHY phy_layer // Access to PHY layer
+    --
+    void update_sdr_phy(PHY* phy_layer)
+    void cb_pss_found()
+    void cb_mib_found()
+}
+
+class SDR {
+    SDR implementation. SDRs produce SampleVectors from an SDR and passes them to SampleConsumers for doing work on them.
+    ..
+    SampleConsumer* sample_consumers[] // Work can happen in parallel
+    int sample_rate
+    int frequency
+    int rx_gain
+    --
+    void rx(int num_samples) // Receive SampleVector of size num_samples and distribute to sample_consumers
+    void tx(SampleVector* samples) // Transmit SampleVector
+}
+
+class FileSource {
+    Produces SampleVectors from file and passes them to SampleConsumers for doing work on them.
+    ..
+    SampleConsumer* sample_consumers[] // Work can happen in parallel
+    int sample_rate
+    int skip
+    int length
+}
+
+class PHY {
+    Physical layer implementation. The Physical layer produces Symbols and passes them to SymbolConsumers for doing work on them.
+    ..
+    #define NRB_SSB 20
+
+    SymbolConsumer* rg_consumers[] // Work can happen in parallel
+    Symbol* rg_queue
+
+    uint8_t scs_ssb // SSB subcarrier spacing found by Syncer
+    uint8_t scs_common
+    uint16_t n_rb
+    int cfo
+    int k_ssb
+    int ss_zero
+    int cell_id
+    int current_slot // Updated by syncer only
+    int current_subframe // Updated by syncer only
+    int timing_offset
+    BandwidthPart* active_bandwidth_part
+    Carrier carriers[]
+}
+
+class BandwidthPart {
+    int n_rbs
+    int subcarrier_spacing
+    int rb_offset_carrier
+}
+
+class Carrier {
+    int n_rbs
+    int rb_offset_point_a
+}
+
+class Syncer {
+    Responsible for correlating with the SSB in order to sync time and frequency.
+    ..
+    enum SyncState sync_state
+    --
+    bool do_sync() // Whether to only look for PSS (cell search) or actually sync
+    void correlate(SampleVector* samples) // Finds PSS in samples and reports frequency to sniffer if found
+    void time_sync(SampleVector* samples) // Cuts samples so we are aligned in time
+}
+
+class OFDMDemodulator {
+    Responsible for decomposing samples into resource elements in the resource grid.
+    Or pass individual symbols.
+    Uses PHY config extensively to determine resource blocks, etc.
+    It should be possible to create this block indepenently if we need to for example
+    decode multiple iterations with different frequency offsets in PDSCH (see Matlab)
+    ..
+    --
+    //void modulate(Symbol symbols) TODO OFDMModulator
+    void work(SampleVector samples) // Queues RGs into PHY layer
+}
+
+class SampleVector {
+    int size
+    // fft_samples buffer? 
+}
+
+abstract class SampleConsumer {
+    SampleConsumers can be bound to a SampleVector for processing raw samples.
+    ..
+    SampleConsumer* next[] // Next consumers to call in parallel
+    int samples_processed
+    int bypass_samples // Pass samples immediately to next consumers without doing work on them
+                       // Syncer for example should bypass every xx ms (after sync) depending on SSB config
+    Sniffer* sniffer // SampleConsumers might need to send a signal to sniffer when an event occurs (e.g. PSS found)
+                     // or to update or get info from PHY (k_ssb)
+    --
+    void process(SampleVector* samples); // Function that performs bypass and other setup
+    abstract void work(SampleVector* samples) // Actual task-specific processing
+}
+
+abstract class SymbolConsumer {
+    SymbolConsumers can be bound to a Symbol for processing symbols.
+    ..
+    SymbolConsumer* next[] // Next consumers to call in parallel (e.g. multiple channels in parallel)
+    Sniffer* sniffer // SymbolConsumers might need to signal sniffer when event occurs (e.g. BCH found) or update PHY (setting in SIB1)
+}
+
+class ChannelMapper {
+    Maps resource grid onto CORESET, PBCH, PDCCH, etc.
+    ..
+    enum MapperState mapper_state
+    PBCH pbch
+    PDCCH pdcch
+    PDSCH pdsch
+    PRACH prach
+    --
+    void channel_estimate() // Channel estimate based on state
+}
+
+class PBCH {
+    Class containing all functions to convert resource elements into codeword bits.
+    ..
+    BCH bch
+    Sniffer *sniffer // TODO: Better way for this? Need to pass MIB
+    --
+    void demodulate(Symbol rg) // Equalize, demodulate, pass to BCH
+}
+
+class BCH {
+    Class containing all functions to convert codewords into data bits.
+    ..
+    Sniffer *sniffer // TODO: Better way for this? Need to pass MIB
+    --
+    void decode(uint8_t* bits[]) // Ratematching, polar decoding, crc
+}
+
+enum SyncState {
+    NOT_SYNCED
+    SYNCED
+}
+
+enum MapperState {
+    MAP_SSB
+    MAP_CHANNELS
+}
+
+together {
+    class Sniffer
+    class SDR
+    class FileSource
+}
+
+Sniffer -up- SDR
+Sniffer -up- FileSource
+Sniffer -> PHY
+
+PHY *-down- Carrier
+PHY *- SymbolConsumer
+
+SymbolConsumer <|-- ChannelMapper
+
+Syncer - OFDMDemodulator
+
+SampleConsumer <|-- Syncer
+SampleConsumer <|-- OFDMDemodulator
+SampleConsumer <|-- SamplePlot
+SampleConsumer -up- SampleVector
+
+SDR *- SampleConsumer
+FileSource *- SampleConsumer
+
+ChannelMapper -> PDSCH
+ChannelMapper -> PBCH
+ChannelMapper -> PDCCH
+ChannelMapper -> PRACH
+
+ChannelMapper <|-- FDDChannelMapper
+ChannelMapper <|-- TDDChannelMapper
+
+OFDMDemodulator - FDDChannelMapper
+
+Carrier *- BandwidthPart
+
+PBCH -down- BCH
+
+@enduml

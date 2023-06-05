@@ -1,0 +1,36 @@
+[sniffer]
+file_path = "../test/samples/srsRAN_octoclock_samprate_2304_10MHz_scscommon_15khz_b200_fdd_n71_pci_1_2phones_onevoicecall_oneyoutube_rntis_4601_4602_5seconds.fc32"
+#file_path = "../test/samples/srsRAN_octoclock_samprate_2304_10MHz_scscommon_15khz_b200_fdd_n71_2phones_onevoicecall_oneyoutube_rntis_4601_4602_cut_27ms.fc32"
+#file_path = "../test/samples/srsRAN_octoclock_samprate_2304_10MHz_scscommon_15khz_b200_fdd_n71_2phones_onevoicecall_oneyoutube_rntis_4601_4602_cut_203ms_withsib1.fc32"
+sample_rate = 23040000
+frequency = 627750000
+nid_1 = 1
+
+#[[pdcch]]
+#si_dci_only = true
+#use_config_from_mib = true
+
+[[pdcch]]
+coreset_id = 1
+# sc offset aligns the BWP to the lowest SC of the BWP
+# As there is an offset of 150 KHz between SSB (to the fc we synch) and the DL_ARCFN,
+# the CBW is 52 RBs, and our CORESET is 48 RBs, we shift by 150KHz/15KHz + (52-48)*12(sc/RB)/2
+# divided by 2 because we are centered around SSB.
+subcarrier_offset = 34 
+num_prbs = 48
+numerology = 0
+dci_sizes_list = [39]
+scrambling_id_start = 1
+scrambling_id_end = 1
+#rnti_start = 1000
+#rnti_end = 60000
+rnti_start = 17921
+rnti_end = 17922
+#sc_power_decision = true
+interleaving_pattern = "non-interleaved"
+coreset_duration = 2
+AL_corr_thresholds = [1, 1, 0.5, 1, 1]
+num_candidates_per_AL = [0, 0, 4, 0, 0]
+#AL_corr_thresholds = [0.5, 0.5, 0.5, 0.5, 1]
+#num_candidates_per_AL = [8, 4, 4, 1, 0]
+

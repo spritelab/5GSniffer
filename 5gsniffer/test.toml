@@ -1,0 +1,10 @@
+[sniffer]
+file_path = "../test/samples/tmobile_23040000_627750000_othersideISEC_5seconds_pci429_2_greatSNR_small_firstSSBandSIB1.fc32"
+#file_path = "../test/samples/tmobile_23040000_627750000_othersideISEC_5seconds_pci429_2_greatSNR_small_secondSSBandSIB1.fc32"
+sample_rate = 23040000
+frequency = 627750000
+
+[[pdcch]]
+si_dci_only = true
+use_config_from_mib = true
+
