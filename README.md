@@ -1,10 +1,9 @@
 # 5GSniffer
-5GSniffer is a free open-source 5G Physical Downlink Control Channel (PDCCH) blind decoder. The tool decodes the PDCCH of a specific 5G base station (gNB), and reveals the Radio Network Temporary Identifiers (RNTI) that are present in the cell. The code is written in C++ and uses optimization libraries. The project was build from scratch but uses certain srsRAN libraries as support.
+5GSniffer is a free open-source 5G Physical Downlink Control Channel (PDCCH) blind decoder. The tool decodes the PDCCH of a specific 5G base station (gNB), which contains the Downlink Control Information (DCI). This reveals the Radio Network Temporary Identifiers (RNTI) that are present in the cell, as well as other information enabling traffic analysis. 5GSniffer is optimized to overcome several of the challenges introduced by the 5G design. For instance, decoding requires descrambling with information (RNTI and pdcch-DMRS-ScramblingID) provided to the UE in encrypted message. The code is written in C++ and uses optimization libraries. The sniffer was developed from scratch but uses srsRAN libraries as support (e.g., polar decoding).
 
-5GSniffer enables analysis and XXX.
 The capabilities of 5GSniffer have been illustrated in our research publication at 2023 IEEE Symposium on Security and Privacy (SP) [From 5G Sniffing to Harvesting Leakages of Privacy-Preserving Messengers](https://doi.ieeecomputersociety.org/10.1109/SP46215.2023.00110). Please cite as described in the [Acknowledgments](#acknowledgments) section.
 
-This research project has been funded by XXX
+This research was conducted as part of a research project, 5G ROSETA, funded by the Office of Naval Research (ONR).
 
 ## Features
 - 5G PDCCH Decoder
@@ -18,31 +17,14 @@ This research project has been funded by XXX
 ## Installation
 
 ### Pre-requisites
-We have successfully compiled our code in Ubuntu 22.04 with the following dependencies: 
+The code was tested to successfully compile on Ubuntu 22.04. Please use the following instructions to install the required dependences. 
 
 ```
 sudo apt-get update
-sudo apt-get install cmake make gcc g++ pkg-config libfftw3-dev libmbedtls-dev libsctp-dev libyaml-cpp-dev libgtest-dev
+sudo apt-get install cmake make gcc g++ pkg-config libfftw3-dev libmbedtls-dev libsctp-dev libyaml-cpp-dev libgtest-dev libliquid-dev libconfig++-dev libzmq3-dev libspdlog-dev libfmt-dev
 ```
 
-LiquidSDR:
-https://github.com/jgaeddert/liquid-dsp
-
-```
-sudo apt-get install automake autoconf
-git clone git://github.com/jgaeddert/liquid-dsp.git
-cd liquid-dsp
-./bootstrap.sh
-./configure
-make
-sudo make install
-```
-ZeroMQ:
-```
-sudo apt-get install libzmq3-dev
-```
-
-Install clang (version 14):
+5GSniffer was tested with clang version 14:
 ```
 sudo apt install clang
 ```
@@ -51,15 +33,19 @@ SPDLOG?
 sudo apt-get install libspdlog-dev
 ```
 
-LIBFMT?
+<!-- LIBFMT?
 ```
 sudo add-apt-repository universe
 sudo apt update
 sudo apt install libfmt-dev
-```
+``` -->
 
 ### Hardware
 Uses srsRAN basic SDR libraries, supports USRP B210, X310, bladeRF. For this release it is recommended to use a recorded file.
+
+```
+sudo apt-get install libuhd-dev uhd-host
+```
 
 ### Building
 ```
@@ -75,10 +61,15 @@ make -j 8
 
 Add the -DCMAKE_BUILD_TYPE=Debug flag to build in developer / debug mode
 
+You can also just:
+```
+cd 5gsniffer
+./compile
+```
 
 ## Usage instructions
 
-Example file to run the code:
+The easiest way to try 5GSniffer is on a recorded file of I&Q samples. Download the following file to run the code:
 https://drive.google.com/drive/folders/16YMVftlxgPgA8O3zwtno4VHCPzVWXFbX?usp=share_link
 This recording was taken by connecting 2 smartphones to a srsRAN 5G gNB and generating traffic on both UEs.
 
