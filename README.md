@@ -20,13 +20,40 @@ This research project has been funded by XXX
 sudo apt-get update
 ```
 ### Pre-requisites
+We have successfully compiled our code in Ubuntu 22.04 with the following dependencies: 
 
 ```
 sudo apt-get update
+sudo apt-get install cmake make gcc g++ pkg-config libfftw3-dev libmbedtls-dev libsctp-dev libyaml-cpp-dev libgtest-dev
+```
+Protobuf:
+```
+sudo apt install protobuf-compiler
+```
+LiquidSDR:
+https://github.com/jgaeddert/liquid-dsp
+
+```
+sudo apt-get install automake autoconf
+git clone git://github.com/jgaeddert/liquid-dsp.git
+cd liquid-dsp
+./bootstrap.sh
+./configure
+make
+sudo make install
+```
+ZeroMQ:
+```
+sudo apt-get install libzmq3-dev
+```
+
+Install clang (version 14):
+```
+sudo apt install clang
 ```
 
 ### Hardware
-Uses srsRAN basic SDR libraries, supports USRP B210, X310, bladeRF.
+Uses srsRAN basic SDR libraries, supports USRP B210, X310, bladeRF. For this release it is recommended to use a recorded file.
 
 ### Building
 ```
@@ -34,9 +61,9 @@ git clone --recurse-submodules git@github.com:spritelab/5GSniffer.git
 cd 5GSniffer/5gsniffer
 mkdir -p build
 cd build
-export CXX=/usr/bin/clang++
-export CC=/usr/bin/clang
-cmake -DCMAKE_C_COMPILER=/usr/bin/clang -DCMAKE_CXX_COMPILER=/usr/bin/clang++ ..
+export CXX=/usr/bin/clang++14
+export CC=/usr/bin/clang-14
+cmake -DCMAKE_C_COMPILER=/usr/bin/clang-14 -DCMAKE_CXX_COMPILER=/usr/bin/clang++14 ..
 make -j 8
 ```
 
