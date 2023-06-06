@@ -27,9 +27,9 @@ sudo apt-get install cmake make gcc g++ pkg-config libfftw3-dev libmbedtls-dev l
 5GSniffer was tested with clang version 14:
 ```
 sudo apt install clang
+```
 
 <!--
-```
 SPDLOG?
 ```
 sudo apt-get install libspdlog-dev
