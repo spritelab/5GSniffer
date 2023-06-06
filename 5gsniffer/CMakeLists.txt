@@ -84,9 +84,6 @@ link_directories(${INSTALL_DIR}/src/srsRAN-build/lib/src/pdcp)
 add_compile_definitions(SPDLOG_FMT_EXTERNAL)
 find_package(spdlog REQUIRED)
 
-# Parallelization with OpenMP
-find_package(OpenMP REQUIRED)
-
 ########################################################################
 # Add general includes and dependencies
 ########################################################################
