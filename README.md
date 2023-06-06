@@ -51,6 +51,17 @@ Install clang (version 14):
 ```
 sudo apt install clang
 ```
+SPDLOG?
+```
+sudo apt-get install libspdlog-dev
+```
+
+LIBFMT?
+```
+sudo add-apt-repository universe
+sudo apt update
+sudo apt install libfmt-dev
+```
 
 ### Hardware
 Uses srsRAN basic SDR libraries, supports USRP B210, X310, bladeRF. For this release it is recommended to use a recorded file.
