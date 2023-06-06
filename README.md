@@ -30,7 +30,7 @@ Uses srsRAN basic SDR libraries, supports USRP B210, X310, bladeRF.
 
 ### Building
 ```
-git clone --recurse-submodules git@github.com:spritelab/sniffer_test.git
+git clone --recurse-submodules git@github.com:spritelab/5GSniffer.git
 cd 5GSniffer/5gsniffer
 mkdir -p build
 cd build
