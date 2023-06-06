@@ -16,9 +16,7 @@ This research project has been funded by XXX
 ### License
 
 ## Installation
-```
-sudo apt-get update
-```
+
 ### Pre-requisites
 We have successfully compiled our code in Ubuntu 22.04 with the following dependencies: 
 
@@ -26,10 +24,7 @@ We have successfully compiled our code in Ubuntu 22.04 with the following depend
 sudo apt-get update
 sudo apt-get install cmake make gcc g++ pkg-config libfftw3-dev libmbedtls-dev libsctp-dev libyaml-cpp-dev libgtest-dev
 ```
-Protobuf:
-```
-sudo apt install protobuf-compiler
-```
+
 LiquidSDR:
 https://github.com/jgaeddert/liquid-dsp
 
