@@ -1,0 +1,3 @@
+[submodule "5gsniffer/lib/googletest"]
+	path = 5gsniffer/lib/googletest
+	url = https://github.com/google/googletest.git
