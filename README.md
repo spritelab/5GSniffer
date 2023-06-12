@@ -50,11 +50,6 @@ sudo apt-get install libuhd-dev uhd-host
 ```
 
 ### Building
-Our tool has built-in tests using Googletest, that use fc32 files to validate its correct operation. They are stored using Git-LFS, so before cloning git lfs should be installed. If git-lfs is not installed, the .fc32 files will not be pulled, and will result in 2 errors in some tests failing. However, the tool will still compile and will be able to be used normally.
-```
-sudo apt install git-lfs
-```
-
 ```
 git clone --recurse-submodules git@github.com:spritelab/5GSniffer.git
 cd 5GSniffer/5gsniffer
