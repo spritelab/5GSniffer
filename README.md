@@ -51,7 +51,7 @@ sudo apt-get install libuhd-dev uhd-host
 
 ### Building
 ```
-git clone --recurse-submodules git@github.com:spritelab/5GSniffer.git
+git clone --recurse-submodules https://github.com/spritelab/5GSniffer.git
 cd 5GSniffer/5gsniffer
 mkdir -p build
 cd build
