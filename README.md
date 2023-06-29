@@ -75,7 +75,7 @@ The easiest way to try 5GSniffer is on a recorded file of I&Q samples. Download 
 https://drive.google.com/drive/folders/16YMVftlxgPgA8O3zwtno4VHCPzVWXFbX?usp=share_link
 This recording was taken by connecting 2 smartphones to a srsRAN 5G gNB and generating traffic on both UEs.
 
-To run, place the file under /test/samples and run the executable with the config file srsRAN_n71.toml:
+To run, place the file under 5GSniffer/5gsniffer/test/samples and run the executable with the config file srsRAN_n71.toml:
 
 ```
 ./src/5g_sniffer ../srsRAN_n71.toml &> output.txt
