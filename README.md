@@ -78,14 +78,14 @@ This recording was taken by connecting 2 smartphones to a srsRAN 5G gNB and gene
 To run, place the file under 5GSniffer/5gsniffer/test/samples and run the executable with the config file srsRAN_n71.toml:
 
 ```
-./src/5g_sniffer ../srsRAN_n71.toml &> output.txt
+./src/5g_sniffer ../SpriteLab-Private5G.toml &> output.txt
 ```
-
-### Executables
 
 ### Config files
 
 ### Logs
+
+A sample output log of our tool is included, the logs include MIB decoding information and the found DCI bits.
 
 ## Acknowledgments
 If you enjoyed the tool, please acknowledge us in your publications by citing:
