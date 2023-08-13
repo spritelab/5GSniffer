@@ -27,38 +27,35 @@
 #include <vector>
 #include <complex>
 #include <memory>
-#include <thread>
 #include <zmq.hpp>
 #include "worker.h"
+#include "bandwidth_part.h"
+#include "channel_mapper.h"
+#include "config.h"
 
 using namespace std;
 
 /**
- * A flow is a worker that copies all input samples to a threaded processing
- * flow graph.
+ * A flow is a worker that processes only synchronized samples, potentially from a remote machine
  */
 class flow : public worker {
   public:
-    flow(uint64_t flow_id, zmq::socket_ref send_socket, shared_ptr<counting_semaphore<>> available_flows);
+    flow();
     virtual ~flow();
-    // void process(shared_ptr<vector<complex<float>>>& samples) override;
-    void process(shared_ptr<vector<complex<float>>>& samples, int64_t metadata) override;
-    void finish() override;
-    void handle_messages();
-    void set_available();
+    void remote_connect(string ip_address = "127.0.0.1");
 
-    bool available;
     bool sniffer_finished;
-    uint64_t flow_id;
   private:
-    void wait_for_start_message_ack(zmq::socket_ref send_socket);
-    void wait_for_start_message(zmq::socket_ref receive_socket);
+    void hello(string ip_address);
+    void configure();
 
-    thread t;
-    zmq::socket_ref send_socket;
+    zmq::context_t main_ctx;
+    zmq::socket_t zmq_socket;
     std::string routing_id;
-    int64_t metadata;
-    shared_ptr<counting_semaphore<>> available_flows;
+    struct config config;
+
+    vector<shared_ptr<bandwidth_part>> bandwidth_parts;
+    vector<shared_ptr<channel_mapper>> channel_mappers;
 };
 
 #endif // FLOW_H

@@ -43,6 +43,7 @@ class sniffer {
     unique_ptr<worker> device;
   private:
     void init();
+
     bool running;
 };
 

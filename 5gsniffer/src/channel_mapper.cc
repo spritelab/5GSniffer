@@ -35,35 +35,36 @@ extern struct config config;
 /** 
  * Constructor for channel_mapper.
  */
-channel_mapper::channel_mapper(shared_ptr<nr::phy> phy, pdcch_config pdcch_config) :
-  phy(phy) {
+channel_mapper::channel_mapper(uint16_t cell_id, uint32_t slots_per_frame, pdcch_config pdcch_cfg) :
+  pdcch_cfg(pdcch_cfg) {
 
   // Configure the PDCCH
-  pdcch.subcarrier_offset = pdcch_config.subcarrier_offset;
-  pdcch.scrambling_id_start = pdcch_config.scrambling_id_start;
-  pdcch.scrambling_id_end = pdcch_config.scrambling_id_end;
-  pdcch.rnti_start = pdcch_config.rnti_start;
-  pdcch.rnti_end = pdcch_config.rnti_end;
-  pdcch.dci_sizes_list = pdcch_config.dci_sizes_list;
-  pdcch.AL_corr_thresholds = pdcch_config.AL_corr_thresholds;
-  pdcch.max_rnti_queue_size = pdcch_config.max_rnti_queue_size;
-  pdcch.sc_power_decision = pdcch_config.sc_power_decision;
-  pdcch.sample_rate_time = pdcch_config.sample_rate_time;
-  pdcch.rnti_list_length = pdcch_config.rnti_list_length;
-  std::vector<uint8_t> num_candidates_per_AL = pdcch_config.num_candidates_per_AL;  
+  // TODO to make this a bit more clean, make the cfg part of pdcch object
+  pdcch.subcarrier_offset = pdcch_cfg.subcarrier_offset;
+  pdcch.scrambling_id_start = pdcch_cfg.scrambling_id_start;
+  pdcch.scrambling_id_end = pdcch_cfg.scrambling_id_end;
+  pdcch.rnti_start = pdcch_cfg.rnti_start;
+  pdcch.rnti_end = pdcch_cfg.rnti_end;
+  pdcch.dci_sizes_list = pdcch_cfg.dci_sizes_list;
+  pdcch.AL_corr_thresholds = pdcch_cfg.AL_corr_thresholds;
+  pdcch.max_rnti_queue_size = pdcch_cfg.max_rnti_queue_size;
+  pdcch.sc_power_decision = pdcch_cfg.sc_power_decision;
+  pdcch.sample_rate_time = pdcch_cfg.sample_rate_time;
+  pdcch.rnti_list_length = pdcch_cfg.rnti_list_length;
+  std::vector<uint8_t> num_candidates_per_AL = pdcch_cfg.num_candidates_per_AL;  
 
-  coreset coreset_info_(pdcch_config.coreset_id,
-                        pdcch_config.num_prbs,
-                        pdcch_config.coreset_duration,
-                        pdcch_config.coreset_interleaving_pattern,
-                        pdcch_config.coreset_reg_bundle_size,
-                        pdcch_config.coreset_interleaver_size,
-                        pdcch_config.coreset_nshift,
-                        phy->get_cell_id(),
-                        pdcch_config.coreset_ofdm_symbol_start,
+  coreset coreset_info_(pdcch_cfg.coreset_id,
+                        pdcch_cfg.num_prbs,
+                        pdcch_cfg.coreset_duration,
+                        pdcch_cfg.coreset_interleaving_pattern,
+                        pdcch_cfg.coreset_reg_bundle_size,
+                        pdcch_cfg.coreset_interleaver_size,
+                        pdcch_cfg.coreset_nshift,
+                        cell_id,
+                        pdcch_cfg.coreset_ofdm_symbol_start,
                         14,
-                        phy->get_initial_dl_bandwidth_part()->slots_per_frame,
-                        pdcch_config.num_candidates_per_AL);
+                        slots_per_frame,
+                        pdcch_cfg.num_candidates_per_AL);
   pdcch.set_coreset_info(coreset_info_);
 
   // Initialize RNTI list and DMRS sequences

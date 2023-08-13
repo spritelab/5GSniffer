@@ -63,9 +63,6 @@ class bandwidth_part {
     uint64_t samples_per_symbol(uint64_t symbol_index_in_subframe);
     uint64_t samples_per_slot(uint64_t slot_index_in_subframe);
     uint64_t samples_per_cp(uint64_t symbol_index_in_subframe);
-
-    std::array<uint8_t,4> get_pdcch_coreset0(uint16_t min_chann_bw, uint32_t ssb_scs, uint32_t pdcch_scs, uint8_t coreset0_idx);
-
   private:
     const bool extended_prefix;
 };

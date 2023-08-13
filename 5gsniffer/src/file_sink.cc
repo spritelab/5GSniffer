@@ -31,6 +31,7 @@ using namespace std;
  */
 file_sink::file_sink(string path) :
   f{path, ofstream::binary} {
+    this->path = path;
     SPDLOG_DEBUG("Opening file_sink to {}", path);
 }
 

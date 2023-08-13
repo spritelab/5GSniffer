@@ -39,6 +39,8 @@ class file_sink : public worker {
     file_sink(string path);
     virtual ~file_sink();
     void process(shared_ptr<vector<complex<float>>>& samples, int64_t metadata) override;
+
+    string path;
   private:
     ofstream f;
 };

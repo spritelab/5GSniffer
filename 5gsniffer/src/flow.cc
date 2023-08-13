@@ -21,61 +21,55 @@
 
 #include "flow.h"
 #include "spdlog/spdlog.h"
+#include "proto/protocol.pb.h"
 #include <asm-generic/errno.h>
+#include <cstdint>
+#include <memory>
 #include <unistd.h>
 #include <zmq.hpp>
+
+#include "rotator.h"
+#include "ofdm.h"
+#include "channel_mapper.h"
 
 using namespace std;
 
 /** 
- * Constructor for flow.
- *
- * @param path path to the file to write
+ * Constructor for flow. A flow will connect over ZeroMQ to a remote endpoint
+ * in order to receive synchronized streams of samples or symbols.
  */
-flow::flow(uint64_t flow_id, zmq::socket_ref send_socket, shared_ptr<counting_semaphore<>> available_flows) :
-  flow_id(flow_id),
-  available_flows(available_flows) {
+flow::flow() {
   finished = false;
   sniffer_finished = false;
-  available = false;
 
-  stringstream ss;
-  ss << "flow_" << flow_id;
-  routing_id = ss.str();
-  metadata = 0;
-
-  this->send_socket = send_socket;
-
-  t = thread(&flow::handle_messages, this);
-  SPDLOG_DEBUG("Created flow with thread id {}", std::hash<thread::id>{}(t.get_id()));
-
-  // Block until we receive the start message acknowledgement from the flow thread
-  wait_for_start_message_ack(send_socket);
+  routing_id = "<unassigned>";
 }
 
+/**
+ * Destructor for flow.
+ */
 flow::~flow() {
-  // Wait for thread to finish
-  t.join();
   SPDLOG_DEBUG("Flow {} shutdown", routing_id);
 }
 
-void flow::set_available() {
-  assert(this->num_next_workers() == 0); // A flow that is considered available shouldn't already be busy processing something else
-  SPDLOG_DEBUG("Flow {} became available", routing_id);
-  available = true;
-  this->available_flows->release();
-}
+/**
+ * Sends a Hello message, which announces the flow's presence to the server.
+ * The server will respond with the routing ID that the flow should use for
+ * subsequent communications. The flow will reconnect to the server using this
+ * new routing ID.
+ */
+void flow::hello(string ip_address) {
+  FlowMessage flow_message;
+  HelloMessage* hello = new HelloMessage();
+  flow_message.set_allocated_hello_message(hello);
 
-void flow::wait_for_start_message_ack(zmq::socket_ref send_socket) {
-  SPDLOG_DEBUG("Waiting for {} start message acknowledgement", routing_id);
-  zmq::message_t identifier(routing_id);
-  zmq::message_t empty;
+  SPDLOG_DEBUG("Sending hello message");
+  zmq::message_t msg(flow_message.SerializeAsString());
 
   bool success = false;
   do {
     try {
-      send_socket.send(identifier, zmq::send_flags::sndmore);
-      send_socket.send(empty, zmq::send_flags::none);
+      zmq_socket.send(msg, zmq::send_flags::none);
       success = true;
     } catch(zmq::error_t e) {
       if (e.num() != EHOSTUNREACH) {
@@ -85,85 +79,133 @@ void flow::wait_for_start_message_ack(zmq::socket_ref send_socket) {
       }
     }
   } while(!success);
+
+  SPDLOG_DEBUG("Waiting for hello response...");
+  auto result = zmq_socket.recv(msg, zmq::recv_flags::none);
+  
+  const char* routing_id_buffer = reinterpret_cast<const char*>(msg.data());
+
+  // Reinstantiate socket with received routing ID
+  routing_id = string(routing_id_buffer);
+  SPDLOG_DEBUG("Hello response received! Setting routing ID to {}", routing_id);
+  zmq_socket.close();
+  zmq_socket = zmq::socket_t(main_ctx, zmq::socket_type::dealer);
+  SPDLOG_DEBUG("Flow {} connecting to remote endpoint", routing_id);
+  zmq_socket.set(zmq::sockopt::linger, 0);
+  zmq_socket.set(zmq::sockopt::routing_id, routing_id);
+  zmq_socket.connect("tcp://" + ip_address + ":23501");
 }
 
-void flow::wait_for_start_message(zmq::socket_ref receive_socket) {
+void flow::configure() {
   zmq::message_t msg;
 
-  SPDLOG_DEBUG("Waiting for {} start message", routing_id);
-  auto result = receive_socket.recv(msg, zmq::recv_flags::none);
-  assert(*result == 0);
-  SPDLOG_DEBUG("Start message received!");
+  SPDLOG_DEBUG("Waiting for configure message...");
+  auto result = zmq_socket.recv(msg, zmq::recv_flags::none);
+  SPDLOG_DEBUG("Got configure message: {}", msg.str());
 
-  this->set_available();
-}
+  ConfigMessage cfg_msg;
+  cfg_msg.ParseFromArray(msg.data(), msg.size());
 
-void flow::finish() {
-  // Send stop event to thread (empty message)
-  SPDLOG_DEBUG("Sending stop message to {}", routing_id);
-  try {
-    zmq::message_t identifier(routing_id);
-    zmq::message_t empty;
-    send_socket.send(std::move(identifier), zmq::send_flags::sndmore);
-    auto result = send_socket.send(std::move(empty), zmq::send_flags::none);
-  } catch(zmq::error_t e) {  // Ignore stop message that don't arrive because the flow already stopped
-    if (e.num() != EHOSTUNREACH) {
-      SPDLOG_ERROR("ZMQ error: {}", e.what());
-    }
-  }
-}
+  SPDLOG_DEBUG("Config message: {}", cfg_msg.DebugString());
+  SPDLOG_DEBUG("MIB SCS Common is: {}", (uint8_t)cfg_msg.mib_scs_common());
 
-/** 
- * 
- *
- * @param samples shared_ptr to sample buffer
- */
-void flow::process(shared_ptr<vector<complex<float>>>& samples, int64_t metadata_) {
-  zmq::message_t identifier(routing_id);
-  zmq::message_t payload(samples->begin(), samples->end()); // I MIGHT HAVE TO ADD THE METADATA HERE.
-  // payload.append(metadata_);
-  metadata = metadata_;
-  // zmq::message_t meta(metadata_);
-  
-  send_socket.send(std::move(identifier), zmq::send_flags::sndmore);
-  // send_socket.send(std::move(meta), zmq::send_flags::sndmore);
-  auto result = send_socket.send(std::move(payload), zmq::send_flags::none);
-  SPDLOG_DEBUG("Sent {} bytes to {}", *result, routing_id);
-  SPDLOG_DEBUG("Metadata is {}", metadata_);
-}
+  // Load config here
+  this->config = config::load(cfg_msg.config());
 
-void flow::handle_messages() {
-  zmq::context_t thread_ctx;
-  zmq::socket_t receive_socket(thread_ctx, zmq::socket_type::dealer);
-
-  receive_socket.set(zmq::sockopt::routing_id, routing_id);
-  receive_socket.set(zmq::sockopt::linger, 0);
-  receive_socket.connect("tcp://127.0.0.1:23501");
-
-  // Wait until we are connected to the sender
-  wait_for_start_message(receive_socket);
-
-  while(!sniffer_finished) {
-    finished = false;
-
-    while(!finished) {
-      // Receive a new message
-      zmq::message_t msg;
-      auto result = receive_socket.recv(msg, zmq::recv_flags::none);
-      SPDLOG_DEBUG("Received {} bytes from {} metadata {}", *result, routing_id, metadata);
-      if(*result == 0) {
-        finished = true;
-        continue;
+  // Build the flowgraph based on the configuration
+  for(pdcch_config pdcch_cfg : config.pdcch_configs) {
+      // Override config with MIB
+      if(pdcch_cfg.use_config_from_mib) {
+        assert(cfg_msg.mib_scs_common() <= max_numerology);
+        pdcch_cfg.numerology = (uint8_t)cfg_msg.mib_scs_common();
+        std::array<uint8_t, 4> coreset0_config = pdcch::get_pdcch_coreset0(5, cfg_msg.ssb_scs(),  15000U << cfg_msg.mib_scs_common(), cfg_msg.mib_coreset0_index());
+        pdcch_cfg.num_prbs = coreset0_config.at(1);
+        pdcch_cfg.coreset_duration = coreset0_config.at(2);
+        pdcch_cfg.subcarrier_offset = cfg_msg.mib_ssb_offset() + (pdcch_cfg.num_prbs/2);
+        pdcch_cfg.extended_prefix = false;
       }
 
-      // Convert to vector
-      complex<float>* msg_data = reinterpret_cast<complex<float>*>(msg.data());
-      auto samples = make_shared<vector<complex<float>>>(msg_data, msg_data + (msg.size() / sizeof(complex<float>)));
-      SPDLOG_DEBUG("Going to RoTate");
-      this->send_to_next_workers(samples,metadata);
-    }
+      // Simplify brute force if we are looking only for SI DCI
+      if (pdcch_cfg.si_dci_only) { 
+        pdcch_cfg.scrambling_id_start = cfg_msg.cell_id(); // Scrambling ID for SI DCI is always the cell ID
+        pdcch_cfg.scrambling_id_end = cfg_msg.cell_id();
+        pdcch_cfg.rnti_start = 65535; // SI-RNTI is always 65535
+        pdcch_cfg.rnti_end = 65535;
+        pdcch_cfg.coreset_interleaving_pattern = "interleaved";
+        pdcch_cfg.coreset_reg_bundle_size = 6;
+        pdcch_cfg.coreset_interleaver_size = 2;
+        pdcch_cfg.coreset_nshift = cfg_msg.cell_id();
+      }
 
-    this->disconnect_all();
-    this->set_available();
+      auto new_bwp = make_shared<bandwidth_part>(cfg_msg.sample_rate(), pdcch_cfg.numerology, pdcch_cfg.num_prbs, pdcch_cfg.extended_prefix);
+      bandwidth_parts.push_back(new_bwp);
+      
+      auto mapper = make_shared<channel_mapper>(cfg_msg.cell_id(), cfg_msg.slots_per_frame(), pdcch_cfg);
+      channel_mappers.push_back(mapper);
   }
+
+  // Actually attach the bwps and mappers
+  assert(bandwidth_parts.size() == channel_mappers.size());
+  SPDLOG_DEBUG("Creating {} bandwidth part processing flows", bandwidth_parts.size());
+  for(int i = 0; i < bandwidth_parts.size(); i++) {
+      auto bwp = bandwidth_parts.at(i);
+      auto mapper = channel_mappers.at(i);
+      auto rotator = make_shared<class rotator>(bwp->sample_rate, (float)mapper->pdcch.subcarrier_offset*(float)bwp->scs);
+      auto ofdm = make_shared<class ofdm>(bwp);
+      this->connect(rotator);
+      rotator->connect(ofdm);
+      ofdm->connect(mapper);
+  }
+}
+
+void flow::remote_connect(string ip_address) {
+  zmq_socket = zmq::socket_t(main_ctx, zmq::socket_type::dealer);
+
+  //zmq_socket.set(zmq::sockopt::routing_id, routing_id);
+  zmq_socket.set(zmq::sockopt::linger, 0);
+  SPDLOG_DEBUG("Flow {} connecting to remote endpoint", routing_id);
+  zmq_socket.connect("tcp://" + ip_address + ":23501");
+
+  // Wait until we are connected to the sender
+  hello(ip_address);
+
+  // Build the flowgraph from received configuration
+  configure();
+
+  while(!finished) {
+    // Receive a new message
+    zmq::message_t msg;
+    auto result = zmq_socket.recv(msg, zmq::recv_flags::none);
+    SPDLOG_DEBUG("Received {} bytes from {}", *result, routing_id);
+
+    // Parse it
+    FlowMessage flow_message;
+    flow_message.ParseFromArray(msg.data(), msg.size());
+    //SPDLOG_DEBUG("Flow message: {}", flow_message.DebugString());
+
+    if(flow_message.has_data_message()) {
+      // Convert to vector
+      const complex<float>* msg_data = reinterpret_cast<const complex<float>*>(flow_message.data_message().data().data());
+      auto samples = make_shared<vector<complex<float>>>(msg_data, msg_data + (flow_message.data_message().data().size() / sizeof(complex<float>)));
+      /*for(auto x : *samples) {
+        SPDLOG_DEBUG("{} {}i", x.real(), x.imag());
+      }*/
+      int64_t metadata = 0;
+      if(flow_message.data_message().has_sample_index()) {
+        metadata = flow_message.data_message().sample_index();
+      }
+      SPDLOG_DEBUG("Going to rotate {} samples metadata {}", samples->size(), metadata);
+      this->send_to_next_workers(samples, metadata);
+    } else if(flow_message.has_reset_message()) {
+      SPDLOG_DEBUG("Resetting flow");
+      this->reset_all();
+    } else if(flow_message.has_stop_message()) {
+      SPDLOG_DEBUG("Received stop message; stopping worker");
+      finished = true;
+    } else {
+      SPDLOG_DEBUG("Unknown message received.");
+    }
+  }
+
+  this->disconnect_all();
 }

@@ -27,12 +27,40 @@
 #include "sniffer.h"
 #include "exceptions.h"
 #include "config.h"
+#include "flow.h"
 
 using namespace std;
 extern struct config config;
 
+static uint32_t num_flows = 16;
+static vector<thread> flow_threads;
+
 static void usage() {
   cout << "Usage: 5g_sniffer <path_to_config.toml>" << endl;
+  cout << "       5g_sniffer connect <ip_address>" << endl;
+}
+
+static void worker_thread(string ip_address) {
+  SPDLOG_DEBUG("Started worker_thread");
+  flow f;
+  f.remote_connect(ip_address);
+  SPDLOG_DEBUG("Stopped worker_thread");
+}
+
+
+static void start_flows(uint32_t nf, string ip_address = "127.0.0.1") {
+  num_flows = nf;
+
+  for(uint32_t i = 0; i < num_flows; i++) {
+    thread t(worker_thread, ip_address);
+    flow_threads.push_back(std::move(t));
+  }
+}
+
+static void stop_flows() {
+  for(uint32_t i = 0; i < num_flows; i++) {
+    flow_threads.at(i).join();
+  }
 }
 
 /** 
@@ -42,7 +70,9 @@ static void usage() {
  * @param argv 
  */
 int main(int argc, char** argv) {
-  string config_path;
+  string config_path = "";
+  string ip_address = "127.0.0.1";
+  bool connect_mode = false;
 
   #ifdef DEBUG_BUILD
     SPDLOG_INFO("=== This is a debug mode build ===");
@@ -60,22 +90,35 @@ int main(int argc, char** argv) {
     config_path = string("config.toml");
   } else if (argc == 2) {
     config_path = string(argv[1]);
+  } else if (argc == 3 && strcmp(argv[1], "connect") == 0) {
+    connect_mode = true;
+    ip_address = string(argv[2]);
   } else {
     usage();
     exit(1);
   }
 
   try {
-    // Load the config
-    config = config::load(config_path);
-
-    // Create sniffer
-    if(config.file_path.compare("") == 0) {
-      sniffer sniffer(config.sample_rate, config.frequency);
-      sniffer.start();  
+    if(connect_mode) {
+      start_flows(16, ip_address);
+      stop_flows();
     } else {
-      sniffer sniffer(config.sample_rate, config.file_path.data());
-      sniffer.start();
+      // Load the config
+      config = config::load(config_path);
+      
+      // Start worker threads
+      start_flows(config.num_local_flows);
+
+      // Create sniffer
+      if(config.file_path.compare("") == 0) {
+        sniffer sniffer(config.sample_rate, config.frequency);
+        sniffer.start();
+      } else {
+        sniffer sniffer(config.sample_rate, config.file_path.data());
+        sniffer.start();
+      }
+
+      stop_flows();
     }
   } catch (sniffer_exception& e) {
     SPDLOG_ERROR(e.what());

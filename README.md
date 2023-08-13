@@ -81,10 +81,17 @@ To run, place the file under 5GSniffer/5gsniffer/test/samples and run the execut
 ./src/5g_sniffer ../SpriteLab-Private5G.toml &> output.txt
 ```
 
+### Distributed processing
+The blind decoding of PDCCH DCIs can be distributed to any number of worker machines (clients) over IP. This reduces the computational load on the host receiving the SDR's samples (the server). An example test setup is shown below for a server hosted at localhost (127.0.0.1). Note that the network link must have sufficient bandwidth to stream samples at the rate specified by `sample_rate` in the config to every client.
+
+1. If not present, add the following line in `config.toml` under the `[sniffer]` section: `bind_ip = "127.0.0.1"`. This is the IP address the server should listen at.
+2. Copy `config.toml` to all clients. The config should be identical on all hosts.
+3. On the clients: `./src/5g_sniffer connect 127.0.0.1`
+4. On the server: `./src/5g_sniffer ../srsRAN_n71.toml`
+
 ### Config files
 
 ### Logs
-
 A sample output log of our tool is included, the logs include MIB decoding information and the found DCI bits.
 
 ## Acknowledgments

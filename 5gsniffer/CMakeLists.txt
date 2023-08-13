@@ -84,6 +84,9 @@ link_directories(${INSTALL_DIR}/src/srsRAN-build/lib/src/pdcp)
 add_compile_definitions(SPDLOG_FMT_EXTERNAL)
 find_package(spdlog REQUIRED)
 
+# Add protobuf
+find_package(Protobuf REQUIRED)
+
 ########################################################################
 # Add general includes and dependencies
 ########################################################################

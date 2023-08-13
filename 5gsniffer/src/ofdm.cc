@@ -58,6 +58,9 @@ ofdm::~ofdm() {
 //  * @param metadata for future work
 //  */
 void ofdm::process(shared_ptr<vector<complex<float>>>& samples, int64_t metadata) {
+  if(samples->size() == 0)
+    return;
+
   SPDLOG_DEBUG("Starting OFDM demodulation");
 
   vector<symbol> produced_symbols;
@@ -163,4 +166,12 @@ string ofdm::get_symbol_dump_path_name() {
   stringstream ss;
   ss << "/tmp/symbols_" << this->bwp->num_subcarriers;
   return ss.str();
+}
+
+void ofdm::reset() {
+  SPDLOG_DEBUG("OFDM parameters reset");
+  leftover_samples.clear();
+  symbol_index = 0;
+  slot_index = 0;
+  samples_processed = 0;
 }

@@ -27,6 +27,7 @@
 #include "spdlog/spdlog.h"
 #include "phy_params_common.h"
 #include "utils.h"
+#include <cstdint>
 #include <memory>
 
 using namespace std;
@@ -96,5 +97,5 @@ void sniffer::stop() {
  * Destructor for sniffer.
  */
 sniffer::~sniffer() {
-
+  
 }

@@ -60,10 +60,13 @@ typedef struct pdcch_config {
 } pdcch_config;
 
 struct config {
+  string config_path;
   string file_path;
   uint64_t sample_rate;
   double frequency;
+  uint32_t num_local_flows;
   uint8_t nid_2;
+  string bind_ip;
 
   vector<pdcch_config> pdcch_configs;
 
@@ -73,10 +76,13 @@ struct config {
     // Parse configuration file
     SPDLOG_INFO("Loading configuration file {}", config_path);
     toml::table toml = toml::parse_file(config_path);
+    conf.config_path = config_path;
     conf.file_path = toml["sniffer"]["file_path"].value_or(""sv).data();
     conf.sample_rate = toml["sniffer"]["sample_rate"].value_or(23'040'000);
     conf.frequency = toml["sniffer"]["frequency"].value_or(627'750'000);
+    conf.num_local_flows = toml["sniffer"]["num_local_flows"].value_or(16);
     conf.nid_2 = toml["sniffer"]["nid_2"].value_or(4);
+    conf.bind_ip = toml["sniffer"]["bind_ip"].value_or("127.0.0.1"sv).data();
 
     if(!toml["pdcch"].is_array_of_tables())
       throw config_exception("PDCCH TOML config should be an array of tables, e.g. [[pdcch]]");
@@ -146,7 +152,7 @@ struct config {
         pdcch_cfg.coreset_nshift = pdcch_table["coreset_nshift"].value_or(0);
         pdcch_cfg.coreset_reg_bundle_size = pdcch_table["coreset_reg_bundle_size"].value_or(6);
         pdcch_cfg.coreset_interleaver_size = pdcch_table["coreset_interleaver_size"].value_or(2);
-        conf.pdcch_configs.push_back(pdcch_cfg);
+        conf.pdcch_configs.push_back(std::move(pdcch_cfg));
       } else {
         SPDLOG_ERROR("Unexpected config file format");
         exit(1);

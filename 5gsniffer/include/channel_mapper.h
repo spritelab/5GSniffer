@@ -42,11 +42,11 @@ using namespace std;
  */
 class channel_mapper : public worker {
   public:
-    channel_mapper(shared_ptr<nr::phy> phy, pdcch_config pdcch_config);
+    channel_mapper(uint16_t cell_id, uint32_t slots_per_frame, pdcch_config pdcch_config);
     virtual ~channel_mapper();
     void process(shared_ptr<vector<symbol>>& symbols, int64_t metadata) override;
 
-    shared_ptr<nr::phy> phy;
+    pdcch_config pdcch_cfg;
     
     // Sublayers
     pdcch pdcch;

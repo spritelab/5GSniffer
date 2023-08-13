@@ -1,3 +1,4 @@
+protoc -I=src --cpp_out=src proto/protocol.proto
 mkdir -p build
 cd build
 export CXX=/usr/bin/clang++-14

@@ -23,6 +23,7 @@
 #define DSP_H
 
 #include <complex>
+#include <cstdint>
 #include <vector>
 #include <span>
 
