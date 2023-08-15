@@ -21,7 +21,7 @@ The code was tested to successfully compile on Ubuntu 22.04. Please use the foll
 
 ```
 sudo apt-get update
-sudo apt-get install cmake make gcc g++ pkg-config libfftw3-dev libmbedtls-dev libsctp-dev libyaml-cpp-dev libgtest-dev libliquid-dev libconfig++-dev libzmq3-dev libspdlog-dev libfmt-dev
+sudo apt-get install cmake make gcc g++ pkg-config libfftw3-dev libmbedtls-dev libsctp-dev libyaml-cpp-dev libgtest-dev libliquid-dev libconfig++-dev libzmq3-dev libspdlog-dev libfmt-dev protobuf-compiler
 ```
 
 5GSniffer was tested with clang version 14:
@@ -53,11 +53,12 @@ sudo apt-get install libuhd-dev uhd-host
 ```
 git clone --recurse-submodules https://github.com/spritelab/5GSniffer.git
 cd 5GSniffer/5gsniffer
+protoc --experimental_allow_proto3_optional -I=src --cpp_out=src proto/protocol.proto
 mkdir -p build
 cd build
-export CXX=/usr/bin/clang++14
+export CXX=/usr/bin/clang++-14
 export CC=/usr/bin/clang-14
-cmake -DCMAKE_C_COMPILER=/usr/bin/clang-14 -DCMAKE_CXX_COMPILER=/usr/bin/clang++14 ..
+cmake -DCMAKE_C_COMPILER=/usr/bin/clang-14 -DCMAKE_CXX_COMPILER=/usr/bin/clang++-14 ..
 make -j 8
 ```
 
