@@ -160,8 +160,8 @@ void pbch::process(shared_ptr<vector<symbol>>& symbols, int64_t metadata) {
   if(phy->in_synch){
     best_i_ssb = phy->i_ssb;
     best_n_hf = phy->n_hf;
-  }else{
-  // Find ibar_ssb
+  } else {
+    // Find ibar_ssb
     for(uint8_t i_ssb = 0; i_ssb <= 4; i_ssb++) {
       for(uint8_t n_hf = 0; n_hf <= 1; n_hf++) {
         float snr = get_ibar_ssb_snr(i_ssb, n_hf, *symbols);
@@ -172,14 +172,13 @@ void pbch::process(shared_ptr<vector<symbol>>& symbols, int64_t metadata) {
         }
       }
     }
-   }
+  }
 
   // Apply the channel estimation for the best i_ssb and n_hf
   channel_estimate(best_i_ssb, best_n_hf, *symbols);
   SPDLOG_DEBUG("Locking to best estimate i_ssb {}, n_hf {}, snr {} for cell id {} phy_in_synch {}", best_i_ssb, best_n_hf, best_snr, phy->get_cell_id(), phy->in_synch);
   phy->i_ssb = best_i_ssb;
   phy->n_hf = best_n_hf;
-
 
   // Collect the PBCH data symbols
   vector<complex<float>> pbch_symbols;

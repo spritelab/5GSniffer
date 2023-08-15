@@ -51,6 +51,8 @@ class worker {
     void connect(shared_ptr<worker> w);
     void disconnect(shared_ptr<worker> w);
     void disconnect_all();
+    virtual void reset(); /// Reset any internal state kept by the worker that is retained between process() calls
+    void reset_all();
     void disconnect_finished();
     void finish_next_workers();
     const size_t num_next_workers();

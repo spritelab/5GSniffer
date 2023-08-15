@@ -5,6 +5,7 @@ file_path = "../test/samples/srsRAN_octoclock_samprate_2304_10MHz_scscommon_15kh
 sample_rate = 23040000
 frequency = 627750000
 nid_1 = 1
+bind_ip = "127.0.0.1"
 
 #[[pdcch]]
 #si_dci_only = true

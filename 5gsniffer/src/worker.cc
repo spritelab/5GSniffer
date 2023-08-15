@@ -136,3 +136,14 @@ void worker::finish_next_workers() {
 const size_t worker::num_next_workers() {
   return this->next_workers.size();
 }
+
+void worker::reset() {
+  
+}
+
+void worker::reset_all() {
+  this->reset();
+  for (const auto& worker : this->next_workers) {
+    worker->reset_all();
+  }
+}

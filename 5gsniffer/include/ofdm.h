@@ -44,6 +44,7 @@ class ofdm : public worker {
     virtual ~ofdm();
     void process(shared_ptr<vector<complex<float>>>& samples, int64_t metadata) override;
     vector<complex<float>> modulate(vector<symbol>& symbols);
+    void reset() override;
   private:
     shared_ptr<bandwidth_part> bwp;
     float cyclic_prefix_fraction;

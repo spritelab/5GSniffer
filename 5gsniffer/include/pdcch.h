@@ -106,6 +106,8 @@ class pdcch : public worker {
     
     uint32_t pdcch_nr_c_init_scrambler(uint16_t RNTI, uint16_t pdcch_scrambling_id);
 
+    static std::array<uint8_t,4> get_pdcch_coreset0(uint16_t min_chann_bw, uint32_t ssb_scs, uint32_t pdcch_scs, uint8_t coreset0_idx);
+
     std::unordered_map<string, std::vector<std::complex<float>> > dmrs_seq_table;
 
     std::unordered_map<string, std::vector<uint64_t> > dmrs_sc_indices_table;

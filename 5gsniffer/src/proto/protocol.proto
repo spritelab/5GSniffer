@@ -1,0 +1,89 @@
+syntax = "proto3";
+
+// Probably not needed
+enum MessageType {
+  HELLO = 0;
+  CONFIG = 1;
+  DATA = 2;
+}
+
+message FlowMessage {
+  MessageType type = 1;
+  oneof payload {
+    HelloMessage hello_message = 2;
+    DataMessage data_message = 3;
+    StopMessage stop_message = 4;
+    ResetMessage reset_message = 5;
+  }
+}
+
+message HelloMessage {
+
+}
+
+message ConfigMessage {
+  string config = 1;
+  uint32 sample_rate = 2;
+  uint32 cell_id = 3;
+  uint32 slots_per_frame = 4;
+  uint32 ssb_scs = 5;
+  uint32 mib_scs_common = 6;
+  uint32 mib_coreset0_index = 7;
+  uint32 mib_ssb_offset = 8;
+}
+
+message DataMessage {
+  bytes data = 1;
+  optional int64 sample_index = 2;
+}
+
+message StopMessage {
+
+}
+
+message ResetMessage {
+
+}
+
+// Block configs ------------------------
+message Config {
+  oneof config {
+    FileSinkConfig file_sink_config = 1;
+    ChannelMapperConfig channel_mapper_config = 2;
+    RotatorConfig rotator_config = 3;
+  }
+}
+
+message FileSinkConfig {
+  string path = 1;
+}
+
+message ChannelMapperConfig {
+  uint32 cell_id = 1;
+  uint32 slots_per_frame = 2;
+
+  int32 subcarrier_offset = 3;
+  uint32 scrambling_id_start = 4;
+  uint32 scrambling_id_end = 5;
+  uint32 rnti_start = 6;
+  uint32 rnti_end = 7;
+  repeated uint32 dci_sizes_list = 8;
+  repeated float al_corr_thresholds = 9;
+  uint32 max_rnti_queue_size = 10;
+  bool sc_power_decision = 11;
+  repeated uint32 num_candidates_per_al = 12;
+  uint32 coreset_id = 13;
+  uint32 num_prbs = 14;
+  uint32 coreset_duration = 15;
+  string coreset_interleaving_pattern = 16;
+  uint32 coreset_reg_bundle_size = 17;
+  uint32 coreset_interleaver_size = 18;
+  uint32 coreset_nshift = 19;
+  uint32 coreset_ofdm_symbol_start = 20;
+  uint32 num_symbols_per_slot = 21;
+}
+
+message RotatorConfig {
+  uint32 sample_rate = 1;
+  float frequency = 2;
+}

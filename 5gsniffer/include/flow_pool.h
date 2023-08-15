@@ -24,10 +24,12 @@
 
 #include <cstdint>
 #include <vector>
+#include <map>
 #include <memory>
 #include <zmq.hpp>
 #include <semaphore>
 #include "flow.h"
+#include "utils.h"
 
 using namespace std;
 
@@ -37,18 +39,29 @@ using namespace std;
  */
 class flow_pool : public worker {
   public:
-    flow_pool(uint64_t max_flows);
+    flow_pool();
     virtual ~flow_pool();
     void process(shared_ptr<vector<complex<float>>>& samples, int64_t metadata) override;
-    shared_ptr<flow> acquire_flow();
+    void configure_flow(uint32_t sample_rate, uint16_t cell_id, uint32_t slots_per_frame, uint32_t ssb_scs, uint8_t mib_scs_common, uint32_t mib_coreset0_index, uint32_t mib_ssb_offset);
+    void stop_flow(string routing_id);
     void release_flows();
+    void release_flow(string routing_id);
+    void release_current_flow();
+    void handle_messages();
+    void send_queued_zmq_messages();
+    void cycle_current_flow();
+
   private:
-    vector<shared_ptr<flow>> pool;
-    vector<shared_ptr<flow>> acquired_flows;
+    map<string, bool> pool;
     zmq::context_t main_ctx;
     zmq::socket_t zmq_socket;
     shared_ptr<counting_semaphore<>> available_flows;
-    uint64_t max_flows;
+    thread t;
+    bool stop;
+    uint32_t flow_index;
+    string current_flow;
+    uint32_t current_flow_index;
+    thread_safe_queue<pair<string, zmq::message_t>> zmq_send_queue;
 };
 
 #endif // FLOW_POOL_H

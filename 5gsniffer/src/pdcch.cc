@@ -444,8 +444,8 @@ int pdcch::decode_pdcch(symbol& symbol, std::vector<std::complex<float>>& pdcch_
     std::string dci_string = dci_msg_bin;
 
     float sample_time = ((float) metadata )/sample_rate_time;
-    SPDLOG_INFO("Found DCI PDCCH DCI: RNTI = {}, AL = {}, DCI size {}, Time = {}, Samples from start = {}, Slots from samples from start = {} Slot within frame = {}, Symbol within slot = {}, binary dci is {}, correlation is {}",
-    dci_.get_rnti(), dci_.get_found_aggregation_level(), dci_.get_nof_bits(), sample_time + symbol_in_chunk* 0.001, sample_time, symbol_in_chunk, symbol.slot_index, symbol.symbol_index, dci_string, dci_.get_correlation());
+    SPDLOG_INFO("Found DCI (PDCCH): RNTI = {}, AL = {}, DCI size {}, Time = {}, Samples from start = {}, Slots from samples from start = {} Slot within frame = {}, Symbol within slot = {}, binary dci is {}, correlation is {}",
+      dci_.get_rnti(), dci_.get_found_aggregation_level(), dci_.get_nof_bits(), sample_time + symbol_in_chunk* 0.001, sample_time, symbol_in_chunk, symbol.slot_index, symbol.symbol_index, dci_string, dci_.get_correlation());
 
   }
     srsran_pdcch_nr_free(&q);
@@ -723,3 +723,137 @@ void pdcch::write_pdcch_symbol_metadata(uint64_t sample_index, uint16_t scrambli
     << std::endl;
   f.close();
 }
+
+std::array<uint8_t,4> pdcch::get_pdcch_coreset0(uint16_t min_chann_bw, uint32_t ssb_scs, uint32_t pdcch_scs, uint8_t coreset0_idx)
+{
+  SPDLOG_DEBUG("coreset0 called with min ch {}, ssb scs {}, pdcch scs {}, coreset0 idx {}", min_chann_bw, ssb_scs, pdcch_scs, coreset0_idx );
+  // TS38.213 Table 13-1. {SS/PBCH block, PDCCH} SCS is {15, 15} kHz and minimum channel bandwidth 5 MHz or 10 MHz.
+  static const std::array<std::array<uint8_t,4>, 15> TABLE_13_1 = {{
+      {1, 24, 2, 0},
+      {1, 24, 2, 2},
+      {1, 24, 2, 4},
+      {1, 24, 3, 0},
+      {1, 24, 3, 2},
+      {1, 24, 3, 4},
+      {1, 48, 1, 12},
+      {1, 48, 1, 16},
+      {1, 48, 2, 12},
+      {1, 48, 2, 16},
+      {1, 48, 3, 12},
+      {1, 48, 3, 16},
+      {1, 96, 1, 38},
+      {1, 96, 2, 38},
+      {1, 96, 3, 38},
+  }};
+  // TS38.213 Table 13-2. {SS/PBCH block, PDCCH} SCS is {15, 30} kHz and minimum channel bandwidth 5 MHz or 10 MHz.
+  static const std::array<std::array<uint8_t,4>, 14> TABLE_13_2 = {{
+      {1, 24, 2, 5},
+      {1, 24, 2, 6},
+      {1, 24, 2, 7},
+      {1, 24, 2, 8},
+      {1, 24, 3, 5},
+      {1, 24, 3, 6},
+      {1, 24, 3, 7},
+      {1, 24, 3, 8},
+      {1, 48, 1, 18},
+      {1, 48, 1, 20},
+      {1, 48, 2, 18},
+      {1, 48, 2, 20},
+      {1, 48, 3, 18},
+      {1, 48, 3, 20},
+  }};
+  // TS38.213 Table 13-3. {SS/PBCH block, PDCCH} SCS is {30, 15} kHz and minimum channel bandwidth 5 MHz or 10 MHz.
+  static const std::array<std::array<uint8_t,4>, 9> TABLE_13_3 = {{
+      {1, 48, 1, 2},
+      {1, 48, 1, 6},
+      {1, 48, 2, 2},
+      {1, 48, 2, 6},
+      {1, 48, 3, 2},
+      {1, 48, 3, 6},
+      {1, 96, 1, 28},
+      {1, 96, 2, 28},
+      {1, 96, 3, 28},
+  }};
+  // TS38.213 Table 13-4. {SS/PBCH block, PDCCH} SCS is {30, 30} kHz and minimum channel bandwidth 5 MHz or 10 MHz.
+  static const std::array<std::array<uint8_t,4>, 16> TABLE_13_4 = {{
+      {1, 24, 2, 0},
+      {1, 24, 2, 1},
+      {1, 24, 2, 2},
+      {1, 24, 2, 3},
+      {1, 24, 2, 4},
+      {1, 24, 3, 0},
+      {1, 24, 3, 1},
+      {1, 24, 3, 2},
+      {1, 24, 3, 3},
+      {1, 24, 3, 4},
+      {1, 48, 1, 12},
+      {1, 48, 1, 14},
+      {1, 48, 1, 16},
+      {1, 48, 2, 12},
+      {1, 48, 2, 14},
+      {1, 48, 2, 16},
+  }};
+  // TS38.213 Table 13-5. {SS/PBCH block, PDCCH} SCS is {30, 15} kHz and minimum channel bandwidth 40 MHz.
+  static const std::array<std::array<uint8_t,4>, 9> TABLE_13_5 = {{
+      {1, 48, 1, 4},
+      {1, 48, 2, 4},
+      {1, 48, 3, 4},
+      {1, 96, 1, 0},
+      {1, 96, 1, 56},
+      {1, 96, 2, 0},
+      {1, 96, 2, 56},
+      {1, 96, 3, 0},
+      {1, 96, 3, 56},
+  }};
+  // TS38.213 Table 13-6. {SS/PBCH block, PDCCH} SCS is {30, 30} kHz and minimum channel bandwidth 40 MHz.
+  static const std::array<std::array<uint8_t,4>, 10> TABLE_13_6 = {{
+      {1, 24, 2, 0},
+      {1, 24, 2, 4},
+      {1, 24, 3, 0},
+      {1, 24, 3, 4},
+      {1, 48, 1, 0},
+      {1, 48, 1, 28},
+      {1, 48, 2, 0},
+      {1, 48, 2, 28},
+      {1, 48, 3, 0},
+      {1, 48, 3, 28},
+  }};
+
+  std::array<uint8_t,4> coreset0_config = {0,0,0,0};
+
+  if (min_chann_bw == 5 || min_chann_bw == 10){
+    if (ssb_scs == 15000 && pdcch_scs == 15000){
+      coreset0_config = TABLE_13_1.at(coreset0_idx);
+
+    } else if (ssb_scs == 15000 && pdcch_scs == 30000){
+      coreset0_config = TABLE_13_2.at(coreset0_idx);
+
+    } else if (ssb_scs == 30000 && pdcch_scs == 15000){
+      coreset0_config =  TABLE_13_3.at(coreset0_idx);
+
+    } else if (ssb_scs == 30000 && pdcch_scs == 30000){
+      coreset0_config =  TABLE_13_4.at(coreset0_idx);
+
+    } else{
+      SPDLOG_ERROR("Wrong input to PDCCH Coreset Type 0 table");
+    }
+  } else if (min_chann_bw == 40000) {
+    if (ssb_scs == 30000 && pdcch_scs == 15000){
+      coreset0_config =  TABLE_13_5.at(coreset0_idx);
+
+    } else if (ssb_scs == 30000 && pdcch_scs == 30000){
+      coreset0_config = TABLE_13_6.at(coreset0_idx);
+      
+    } else{
+      SPDLOG_ERROR("Wrong input to PDCCH Coreset Type 0 table");
+    }
+
+  } else {
+    SPDLOG_ERROR("Wrong input to PDCCH Coreset Type 0 table");
+
+  }
+
+  return coreset0_config;
+
+}
+

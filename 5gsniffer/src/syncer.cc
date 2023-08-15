@@ -88,13 +88,12 @@ syncer::syncer(uint64_t sample_rate, shared_ptr<nr::phy> phy) :
   cfo = 0.0f;
 
   waiting_for_pss = 0;
-  counting_samples = 0;      
-  bool in_synch;
-  ssb_period = 0.02; // SSB periodicity is 20 ms for initial access.
+  counting_samples = 0;
   pss_window_size = 10000;
+  ssb_period = 0.02; // SSB periodicity is 20 ms for initial access.
 
   // Create pool of 64 flows that can process samples in parallel after synchronization
-  flow_pool = make_shared<class flow_pool>(64);
+  flow_pool = make_shared<class flow_pool>();
   this->connect(flow_pool);
 }
 
@@ -365,7 +364,7 @@ void syncer::on_mib_found(srsran_mib_nr_t& mib, bool found) {
   if (found == false){
     on_sync_lost();
   }else{
-  SPDLOG_INFO("Got MIB\nSSB \n Cell ID: {} \n MIB: SFN: {}, SCS: {} ",phy->get_cell_id(), mib.sfn, mib.scs_common);
+  SPDLOG_INFO("Got MIB\nSSB \n Cell ID: {} \n MIB: SFN: {}, SCS: {} ",phy->get_cell_id(), mib.sfn, (uint32_t)mib.scs_common);
   mib_id++;
   char mib_str[512] = {};
   srsran_pbch_msg_nr_mib_info(&mib, mib_str, sizeof(mib_str));
@@ -387,7 +386,7 @@ void syncer::on_mib_found(srsran_mib_nr_t& mib, bool found) {
       if(pdcch_cfg.use_config_from_mib) {
         assert(mib.scs_common <= max_numerology);
         pdcch_cfg.numerology = (uint8_t)mib.scs_common;
-        std::array<uint8_t, 4> coreset0_config = phy->ssb_bwp->get_pdcch_coreset0(5, phy->ssb_bwp->scs,  15000U << mib.scs_common, mib.coreset0_idx);
+        std::array<uint8_t, 4> coreset0_config = pdcch::get_pdcch_coreset0(5, phy->ssb_bwp->scs,  15000U << mib.scs_common, mib.coreset0_idx);
         pdcch_cfg.num_prbs = coreset0_config.at(1);
         pdcch_cfg.coreset_duration = coreset0_config.at(2);
         pdcch_cfg.subcarrier_offset = mib.ssb_offset + (pdcch_cfg.num_prbs/2);
@@ -404,13 +403,12 @@ void syncer::on_mib_found(srsran_mib_nr_t& mib, bool found) {
         pdcch_cfg.coreset_reg_bundle_size = 6;
         pdcch_cfg.coreset_interleaver_size = 2;
         pdcch_cfg.coreset_nshift = phy->get_cell_id();
-
       }
 
       auto new_bwp = make_shared<bandwidth_part>(this->sample_rate, pdcch_cfg.numerology, pdcch_cfg.num_prbs, pdcch_cfg.extended_prefix);
       phy->bandwidth_parts.push_back(new_bwp);
       
-      auto mapper = make_shared<channel_mapper>(phy, pdcch_cfg);
+      auto mapper = make_shared<channel_mapper>(phy->get_cell_id(), phy->get_initial_dl_bandwidth_part()->slots_per_frame, pdcch_cfg);
       phy->channel_mappers.push_back(mapper);
     }
   }
@@ -421,18 +419,19 @@ void syncer::on_mib_found(srsran_mib_nr_t& mib, bool found) {
   }
 
   // Now that we are synced, create a processing flow for each BWP
-  
-  assert(phy->bandwidth_parts.size() == phy->channel_mappers.size());
-  for(int i = 0; i < phy->bandwidth_parts.size(); i++) {
-      auto bwp = phy->bandwidth_parts.at(i);
-      auto mapper = phy->channel_mappers.at(i);
-      auto flow = flow_pool->acquire_flow();
-      auto rotator = make_shared<class rotator>(this->sample_rate, (float)mapper->pdcch.subcarrier_offset*(float)bwp->scs);
-      auto ofdm = make_shared<class ofdm>(bwp);
-      flow->connect(rotator);
-      rotator->connect(ofdm);
-      ofdm->connect(mapper); // Connect OFDM block to the shared PHY-layer channel mapper
-  }
+  // Note that as an optimization, we assume that the flow configuration does not change
+  // during execution of the sniffer (since the flow is configured only once) and that 
+  // this configuration is the same for every connected flow (since samples will be sent
+  // to any available connected flow without rechecking whether the configuration matches).
+  flow_pool->configure_flow(
+    this->sample_rate,
+    phy->get_cell_id(),
+    phy->get_initial_dl_bandwidth_part()->slots_per_frame,
+    phy->ssb_bwp->scs,
+    (uint8_t)mib.scs_common,
+    mib.coreset0_idx,
+    mib.ssb_offset
+  );
 
   // Locking the PSS and SSS to the synch'ed values
   phy->in_synch = true;
@@ -499,10 +498,10 @@ void syncer::fine_time_sync() {
     shared_ptr<vector<complex<float>>> processing_queue_remainder = make_shared<vector<complex<float>>>(std::move(queue_remainder));
     send_to_next_workers(processing_queue_remainder, counting_samples);
     counting_samples = counting_samples + processing_queue_remainder->size();
-      
 
-    // Tell all currently existing flows to finish processing after the workload they received now
-    this->flow_pool->release_flows();
+    // Notify to the current flow that we have detected a new SSS, and hence a new synced block
+    // begins after the currently transmitted samples
+    this->flow_pool->release_current_flow();
 
     // Cut the processing queue
     processing_queue.erase(processing_queue.begin(), processing_queue.begin()+timing_error);
