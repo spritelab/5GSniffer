@@ -32,6 +32,8 @@
 #include <queue>
 #include <spdlog/spdlog.h>
 #include <zmq.hpp>
+#include <condition_variable>
+#include <thread>
 
 using namespace std;
 
