@@ -41,6 +41,7 @@ class sdr : public worker {
     sdr(
       double sample_rate = 23'040'000,
       double frequency = 627'750'000,
+      string rf_args = "",
       double rx_gain = 40.0,
       double tx_gain = 0.0
     );

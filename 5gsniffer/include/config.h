@@ -64,6 +64,8 @@ struct config {
   uint64_t sample_rate;
   double frequency;
   uint8_t nid_2;
+  string rf_args;
+  uint16_t ssb_numerology;
 
   vector<pdcch_config> pdcch_configs;
 
@@ -77,6 +79,8 @@ struct config {
     conf.sample_rate = toml["sniffer"]["sample_rate"].value_or(23'040'000);
     conf.frequency = toml["sniffer"]["frequency"].value_or(627'750'000);
     conf.nid_2 = toml["sniffer"]["nid_2"].value_or(4);
+    conf.rf_args = toml["sniffer"]["rf_args"].value_or(""sv).data();
+    conf.ssb_numerology = toml["sniffer"]["ssb_numerology"].value_or(0);
 
     if(!toml["pdcch"].is_array_of_tables())
       throw config_exception("PDCCH TOML config should be an array of tables, e.g. [[pdcch]]");

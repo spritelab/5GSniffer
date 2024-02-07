@@ -1,10 +1,10 @@
 [sniffer]
 file_path = "../test/samples/srsRAN_octoclock_samprate_2304_10MHz_scscommon_15khz_b200_fdd_n71_pci_1_2phones_onevoicecall_oneyoutube_rntis_4601_4602_5seconds.fc32"
-#file_path = "../test/samples/srsRAN_octoclock_samprate_2304_10MHz_scscommon_15khz_b200_fdd_n71_2phones_onevoicecall_oneyoutube_rntis_4601_4602_cut_27ms.fc32"
-#file_path = "../test/samples/srsRAN_octoclock_samprate_2304_10MHz_scscommon_15khz_b200_fdd_n71_2phones_onevoicecall_oneyoutube_rntis_4601_4602_cut_203ms_withsib1.fc32"
 sample_rate = 23040000
 frequency = 627750000
 nid_1 = 1
+ssb_numerology = 0
+#rf_args = "type=b200,master_clock_rate=23.04e6"
 
 #[[pdcch]]
 #si_dci_only = true

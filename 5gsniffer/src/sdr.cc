@@ -34,29 +34,30 @@
 sdr::sdr(
   double sample_rate,
   double frequency,
+  string rf_args,
   double rx_gain,
   double tx_gain
 ) : sample_rate(sample_rate),
     frequency(frequency),
     rx_gain(rx_gain),
     tx_gain(tx_gain) {
-  SPDLOG_INFO("Starting SDR on {} at {} sps, RX gain {}, TX gain {}.", frequency, sample_rate, rx_gain, tx_gain);
 
   // Try to open device
-  if (srsran_rf_open_devname(&rf, "", (char*)"", 1) == SRSRAN_ERROR) {
+  if (srsran_rf_open_devname(&rf, "", (char*)rf_args.c_str(), 1) == SRSRAN_ERROR) {
     throw sdr_exception("Failed to open SDR");
   }
 
   // Configure according to settings of the SDR object
-  srsran_rf_set_rx_gain(&rf, rx_gain);
-  srsran_rf_set_rx_srate(&rf, sample_rate);
-  srsran_rf_set_rx_freq(&rf, 0, frequency);
+  int set_rx_gain = srsran_rf_set_rx_gain(&rf, rx_gain);
+  double set_sr = srsran_rf_set_rx_srate(&rf, sample_rate);
+  double set_freq = srsran_rf_set_rx_freq(&rf, 0, frequency);
   srsran_rf_start_rx_stream(&rf, false);
+  double get_rx_gain = srsran_rf_get_rx_gain(&rf);
 
   secs_prev = 0;
   frac_secs_prev = 0;
 
-
+  SPDLOG_INFO("Started SDR on {} frequency, at {} sps, RX gain {}.", set_freq, set_sr, get_rx_gain);
 }
 
 /** 

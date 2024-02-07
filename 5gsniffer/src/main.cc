@@ -71,10 +71,10 @@ int main(int argc, char** argv) {
 
     // Create sniffer
     if(config.file_path.compare("") == 0) {
-      sniffer sniffer(config.sample_rate, config.frequency);
+      sniffer sniffer(config.sample_rate, config.frequency, config.rf_args, config.ssb_numerology);
       sniffer.start();  
     } else {
-      sniffer sniffer(config.sample_rate, config.file_path.data());
+      sniffer sniffer(config.sample_rate, config.file_path.data(), config.ssb_numerology);
       sniffer.start();
     }
   } catch (sniffer_exception& e) {

@@ -33,13 +33,14 @@ using namespace std;
  */
 class sniffer {
   public:
-    sniffer(uint64_t sample_rate, uint64_t frequency); ///< Create a sniffer for an SDR source.
-    sniffer(uint64_t sample_rate, string path); ////< Create a sniffer for a file source.
+    sniffer(uint64_t sample_rate, uint64_t frequency, string rf_args, uint16_t ssb_numerology); ///< Create a sniffer for an SDR source.
+    sniffer(uint64_t sample_rate, string path, uint16_t ssb_numerology); ////< Create a sniffer for a file source.
     virtual ~sniffer();
     void start();
     void stop();
 
     uint64_t sample_rate;
+    uint16_t ssb_numerology;
     unique_ptr<worker> device;
   private:
     void init();

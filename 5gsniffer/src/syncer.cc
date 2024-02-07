@@ -275,7 +275,7 @@ void syncer::find_pss() {
       // Cut the received samples at the correct position (both normal and downsampled)
       // We want to cut right before the CP of the PSS (second symbol).
       if(timing_error < phy->ssb_bwp->samples_per_cp(2)){
-        SPDLOG_ERROR("Timing error smaller than cp");
+        SPDLOG_DEBUG("Timing error smaller than cp");
         // state = state::find_pss;
       }
       timing_error -= phy->ssb_bwp->samples_per_cp(2);
