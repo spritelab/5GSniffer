@@ -76,7 +76,7 @@ void correlate_magnitude_normalized(vector<float>& output, span<complex<float>> 
       volk_32fc_x2_conjugate_dot_prod_32fc(&dot_product, a.data()+i, b.data(), b.size());
 
       float a_norm = frobenius_norm({a.data()+i, b.size()});
-      output.at(i) = std::real(dot_product) / (a_norm * b_norm);
+      output.at(i) = std::abs(dot_product) / (a_norm * b_norm);
     }
   } else {
     SPDLOG_ERROR("Invalid sizes for correlation: size of a must be >= b");

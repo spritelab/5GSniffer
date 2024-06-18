@@ -91,8 +91,9 @@ syncer::syncer(uint64_t sample_rate, shared_ptr<nr::phy> phy) :
   counting_samples = 0;      
   bool in_synch;
   ssb_period = 0.02; // SSB periodicity is 20 ms for initial access.
-  pss_window_size = 10000;
-
+  // Window size to look for PSS after we are already sync. 8 OFDM symbols 
+  pss_window_size = std::floor((float)sample_rate /(float)(phy->ssb_bwp->scs) * 8);
+ 
   // Create pool of 64 flows that can process samples in parallel after synchronization
   flow_pool = make_shared<class flow_pool>(64);
   this->connect(flow_pool);
@@ -482,8 +483,9 @@ void syncer::fine_time_sync() {
   sss_position += search_space_start; // Offset is relative to search space start, so true position needs to account for this
 
   uint64_t sss_ref_position = initial_bwp->samples_per_symbol(0) + initial_bwp->samples_per_symbol(1) + initial_bwp->samples_per_symbol(2) + initial_bwp->samples_per_symbol(3) + initial_bwp->samples_per_cp(4);
-  // uint64_t sss_ref_position = initial_bwp->samples_per_symbol(0) + initial_bwp->samples_per_symbol(1) + initial_bwp->samples_per_symbol(2) + initial_bwp->samples_per_symbol(3); // If I get rid of CP I should add + initial_bwp->samples_per_cp(4);
-  int64_t timing_error = sss_position - sss_ref_position; // I am yet to understand this. If I move the timing error by 5 samples I get almost 200 more DCIs. 
+  // In the timing error we also move slightly (1%) into the CP to the left (assuming channel length < CP),
+  // this is usually done to avoid ISI/ICI from next symbol
+  int64_t timing_error = sss_position - sss_ref_position - std::floor(0.01* initial_bwp->samples_per_cp(0));  
   SPDLOG_DEBUG("Full-rate samples per symbol: {}", initial_bwp->samples_per_symbol(1));
   SPDLOG_DEBUG("Full-rate SSS hint: {}", sss_hint);
   SPDLOG_DEBUG("Full-rate SSS should be at: {}", sss_ref_position);

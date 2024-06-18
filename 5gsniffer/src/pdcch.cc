@@ -30,9 +30,7 @@
 #include <execution>
 #include <unordered_map>
 
-
 std::binary_semaphore rnti_list_mutex(1);
-
 
 pdcch::pdcch(){
   RNTI = 0;
@@ -164,7 +162,7 @@ void pdcch::process(shared_ptr<vector<symbol>>& symbols, int64_t metadata) {
 
     auto correlate_dmrs_t0 = time_profile_start();
     found_possible_dci = correlate_DMRS(symbol, found_dci_list);
-    
+
     time_profile_end(correlate_dmrs_t0, "pdcch::correlate_DMRS (correlations for one symbol)");
 
     if (found_possible_dci) {
@@ -459,24 +457,17 @@ float pdcch::compute_correlation_DMRS(symbol& symbol, std::vector<std::complex<f
   vector<complex<float>> pdcch_rx_symbols(symbol.samples.size(),0);
   std::vector<std::complex<float>> rx_dmrs_symbols(pdcch_dmrs_sc_indices.size());
 
+  pdcch_rx_symbols = symbol.samples;
 
-  // Since we don't know the correct DMRS, we cannot compensate for CFO. Try a range of CFOs and store their correlations
-  for(float rot = -45000; rot <= 45000.0; rot += 7500.0) {
-    rotate(pdcch_rx_symbols, symbol.samples, rot, sample_rate_time); // Or num subcarriers * SCS
-
-    for (size_t i = 0; i < pdcch_dmrs_sc_indices.size(); i++ ){
-      rx_dmrs_symbols.at(i) = pdcch_rx_symbols.at(pdcch_dmrs_sc_indices.at(i));
-    }
+  for (size_t i = 0; i < pdcch_dmrs_sc_indices.size(); i++ ){
+    rx_dmrs_symbols.at(i) = pdcch_rx_symbols.at(pdcch_dmrs_sc_indices.at(i));
+  }
 
     std::vector<float> correlation_output(1);
 
-    // Correlate 
     correlate_magnitude_normalized(correlation_output, rx_dmrs_symbols, {pdcch_dmrs_symbols.data(), pdcch_dmrs_symbols.size()});
 
-    correlation_outputs.push_back(correlation_output.at(0));
-  }
-
-  return *std::max_element(correlation_outputs.begin(), correlation_outputs.end());
+    return correlation_output.at(0);
 }
 
 
@@ -510,7 +501,6 @@ bool pdcch::correlate_DMRS(symbol& symbol, std::vector<dci>& found_dci_list){
         pdcch_dmrs_symbols = dmrs_seq_table[key];
 
         correlation_value_per_candidate.at(candidate_idx) = compute_correlation_DMRS(symbol, pdcch_dmrs_symbols, pdcch_dmrs_sc_indices);
-
         if ((agg_level == 0 && correlation_value_per_candidate.at(candidate_idx) > threshold_per_AL.at(0)) | (agg_level == 1 && correlation_value_per_candidate.at(candidate_idx) > threshold_per_AL.at(1)) | 
           (agg_level == 2  && correlation_value_per_candidate.at(candidate_idx) > threshold_per_AL.at(2)) | (agg_level == 3  && correlation_value_per_candidate.at(candidate_idx) > threshold_per_AL.at(3)) |
           (agg_level == 4  && correlation_value_per_candidate.at(candidate_idx) > threshold_per_AL.at(4))){

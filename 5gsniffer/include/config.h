@@ -71,17 +71,17 @@ struct config {
 
   static struct config load(string config_path) {
     struct config conf;
-
+    double default_frequency = 627750000;
+    uint64_t default_sample_rate = 23040000;
     // Parse configuration file
     SPDLOG_INFO("Loading configuration file {}", config_path);
     toml::table toml = toml::parse_file(config_path);
     conf.file_path = toml["sniffer"]["file_path"].value_or(""sv).data();
-    conf.sample_rate = toml["sniffer"]["sample_rate"].value_or(23'040'000);
-    conf.frequency = toml["sniffer"]["frequency"].value_or(627'750'000);
+    conf.sample_rate = toml["sniffer"]["sample_rate"].value_or(default_sample_rate);
+    conf.frequency = toml["sniffer"]["frequency"].value_or(default_frequency);
     conf.nid_2 = toml["sniffer"]["nid_2"].value_or(4);
     conf.rf_args = toml["sniffer"]["rf_args"].value_or(""sv).data();
     conf.ssb_numerology = toml["sniffer"]["ssb_numerology"].value_or(0);
-
     if(!toml["pdcch"].is_array_of_tables())
       throw config_exception("PDCCH TOML config should be an array of tables, e.g. [[pdcch]]");
     

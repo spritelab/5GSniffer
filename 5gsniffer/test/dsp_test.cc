@@ -44,7 +44,7 @@ TEST_F(dsp_test, correlation_magnitude_normalized) {
   correlate_magnitude_normalized(result, ref, inc_mag_but_corr);
   EXPECT_FLOAT_EQ(result.at(0), 0.9999999999999998);
   correlate_magnitude_normalized(result, ref, inc_mag_but_inv_corr);
-  EXPECT_FLOAT_EQ(result.at(0), -0.9999999999999998);
+  EXPECT_FLOAT_EQ(result.at(0), 0.9999999999999998);
   correlate_magnitude_normalized(result, ref, random_corr);
-  EXPECT_FLOAT_EQ(result.at(0), -0.14272705908405414);
+  EXPECT_FLOAT_EQ(result.at(0), 0.238744325750948);
 }
