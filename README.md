@@ -97,6 +97,11 @@ The sniffer can operate from recorded files offline, or using a SDR.
 
 **frequency:** specifies the center frequency used for the SDR operation.
 
+**nid_1:** specifies the N_ID_1 parameter from cell ID. This would only look for this N_ID_1 value.
+
+**ssb_numerology:** specifies the numerology used for the SSB block, i.e. numerology 0 for a subcarrier spacing of 15 kHz and 1 for 30 kHz.
+
+
 #### **PDCCH-specific config parameters:**
 
 5G is flexible and highly configurable; it can operate over multiple Control Resource Sets (CORESET), and multiple PDCCH configurations. As such, it is more complex than LTE and requires additional prior information. The tool allows multiple [pdcch] configs in the configuration file. Each PDCCH can have multiple configurable parameters. The parameters are the following:
@@ -167,7 +172,7 @@ The absoluteFrequencySSB is the frequency position of the subcarrier 0 of resour
 
 Looking at frequencyDomainResources, we see that the bitmap has 8 bits set to 1, this means that our PDCCH occupies 6*8 = 48 RBs. 
 
-The PDCCH BW is 48 RBs, and the subcarrier spacing is 15KHz. Thus the PDCCH bandwidth is 52 RBs *12 subcarrier/RB * 15KHz subcarrier spacing = 8.64 MHz.
+The PDCCH BW is 48 RBs, and the subcarrier spacing is 15KHz. Thus the PDCCH bandwidth is 48 RBs *12 subcarrier/RB * 15KHz subcarrier spacing = 8.64 MHz.
 
 We need to align the lowest subcarrier of the PDCCH BW to pointA, 622.320 MHz. To do so, as our recording is taken at center frequency 627.750 MHz, we need to put the center of the 8.64 MHz BW such that the lowest subcarrier is at BW 622.320 MHz.   622.320 MHz + (8.64/2) MHz = 626.64 MHz. Thus, we have to shift our center frequency by ((627.750 - 626.64) * 1000) KHz / 15 (subcarrier spacing) = 74 subcarriers.
 
