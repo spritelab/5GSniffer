@@ -109,7 +109,7 @@ void ofdm::process(shared_ptr<vector<complex<float>>>& samples, int64_t metadata
     if(symbol_index == bwp->symbols_per_slot) {
       slot_index = (slot_index + 1) % bwp->slots_per_frame;
     }
-    symbol_index %= bwp->symbols_per_subframe;
+    symbol_index %= bwp->symbols_per_slot;
 
     // Keep track of the total number of samples processed.
     samples_processed += bwp->samples_per_symbol(symbol_index);
