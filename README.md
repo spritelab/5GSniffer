@@ -120,7 +120,7 @@ The sniffer can operate from recorded files offline, or using a SDR.
 
 **rnti_start** and **rnti_end:** these values specify the range of RNTIs we want to sniff. From our network operation survey we found that operators only allocate RNTIs in specific subsets of RNTIs.
 
-**interleaving_pattern:** indicates the interleaving pattern used. Corresponds to “_cce-REG-MappingType_” parameter in “_pdcch-Config_” in RRC.
+**coreset_interleaving_pattern:** indicates the interleaving pattern used. Corresponds to “_cce-REG-MappingType_” parameter in “_pdcch-Config_” in RRC.
 
 **coreset_interleaver_size:** corresponds to “_interleaverSize_” parameter in “_pdcch-Config_” in RRC.
 
@@ -129,6 +129,8 @@ The sniffer can operate from recorded files offline, or using a SDR.
 **coreset_duration:** indicates how many OFDM symbols are used for CORESET. Corresponds to “_duration_” parameter in “_pdcch-Config_” in RRC.
 
 **coreset_nshift:** indicates the cyclic shift used for the interleaving pattern. Corresponds to “_shiftIndex_” parameter in “_pdcch-Config_” in RRC.
+
+**coreset_ofdm_symbol_start:** indicates the starting OFDM symbol in the slot that corresponds to the CORESET.
 
 **AL_corr_thresholds:** indicates, for each aggregation level, what is the correlation threshold over which we will try to decode a DCI. Lowering this value increases the speed of the decoder, but also increases the probability of missing DCIs.
 
