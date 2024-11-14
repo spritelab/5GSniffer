@@ -25,6 +25,7 @@
 #include <complex>
 #include <vector>
 #include <span>
+#include <cstdint>
 
 using namespace std;
 

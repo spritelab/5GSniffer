@@ -17,6 +17,7 @@ This research was conducted as part of a research project, 5G ROSETA, funded by 
 ## Installation
 
 ### Pre-requisites
+#### Ubuntu
 The code was tested to successfully compile on Ubuntu 22.04. Please use the following instructions to install the required dependences. 
 
 ```
@@ -24,7 +25,7 @@ sudo apt-get update
 sudo apt-get install cmake make gcc g++ pkg-config libfftw3-dev libmbedtls-dev libsctp-dev libyaml-cpp-dev libgtest-dev libliquid-dev libconfig++-dev libzmq3-dev libspdlog-dev libfmt-dev
 ```
 
-5GSniffer was tested with clang version 14:
+5GSniffer was tested with clang version 14 on Ubuntu:
 ```
 sudo apt install clang
 ```
@@ -42,6 +43,13 @@ sudo apt update
 sudo apt install libfmt-dev
 ``` -->
 
+#### Arch Linux
+Alternatively, on Arch Linux (tested on version 2024-11) the required dependencies can be installed as follows:
+
+```
+pacman -S gcc git cmake clang make libuhd spdlog mbedtls boost lksctp-tools libconfig liquid-dsp cppzmq libvolk
+```
+
 ### Hardware
 Uses srsRAN basic SDR libraries, supports USRP B210, X310, bladeRF. For this release it is recommended to use a recorded file.
 
@@ -50,6 +58,7 @@ sudo apt-get install libuhd-dev uhd-host
 ```
 
 ### Building
+#### Ubuntu
 ```
 git clone --recurse-submodules https://github.com/spritelab/5GSniffer.git
 cd 5GSniffer/5gsniffer
@@ -61,12 +70,30 @@ cmake -DCMAKE_C_COMPILER=/usr/bin/clang-14 -DCMAKE_CXX_COMPILER=/usr/bin/clang++
 make -j 8
 ```
 
-Add the -DCMAKE_BUILD_TYPE=Debug flag to build in developer / debug mode
+Add the `-DCMAKE_BUILD_TYPE=Debug` flag to build in developer / debug mode
 
 You can also just:
 ```
 cd 5gsniffer
 ./compile
+```
+
+#### Arch Linux
+On Arch Linux, 5GSniffer was tested with `gcc` version 14.2.1 and `clang` version 18.1.8. The build process is similar to Ubuntu:
+
+Using `gcc`:
+```
+git clone --recurse-submodules https://github.com/spritelab/5GSniffer.git
+cd 5GSniffer/5gsniffer
+mkdir -p build
+cd build
+cmake ..
+make
+```
+
+When using `clang`, replace the CMake command with the following:
+```
+cmake -DCMAKE_C_COMPILER=/usr/bin/clang -DCMAKE_CXX_COMPILER=/usr/bin/clang++ ..
 ```
 
 ## Usage instructions

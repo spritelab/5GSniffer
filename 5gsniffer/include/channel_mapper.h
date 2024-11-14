@@ -49,7 +49,7 @@ class channel_mapper : public worker {
     shared_ptr<nr::phy> phy;
     
     // Sublayers
-    pdcch pdcch;
+    nr::pdcch pdcch;
 };
 
 #endif // CHANNEL_MAPPER_H

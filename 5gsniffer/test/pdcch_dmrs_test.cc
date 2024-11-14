@@ -33,7 +33,7 @@ class pdcch_dmrs_test : public ::testing::Test {
 
 TEST_F(pdcch_dmrs_test, test_pdcch_set) {
 
-pdcch pdcch_test;
+nr::pdcch pdcch_test;
 
 coreset coreset_info_(0,48,1,"interleaved",6,2,160,0, 0, 14, 10, {8, 4, 2, 1, 0});
 
@@ -50,7 +50,7 @@ EXPECT_EQ(pdcch_test.get_coreset_info().get_interleaver_size(), 2);
 
 TEST_F(pdcch_dmrs_test, test_pdcch_interleaver) {
 
-pdcch pdcch;
+nr::pdcch pdcch;
 
 /*PDCCH1 Comparing with the example from: https://www.linkedin.com/pulse/5g-nr-coreset-configuration-pdcch-resources-mapping-naveen-chelikani/
   Rest comparing with Matlab generated*/
@@ -103,7 +103,7 @@ for (int i_idx = 0 ; i_idx < interleaved.size(); i_idx++)
 
 TEST_F(pdcch_dmrs_test, test_pdcch_dmrs_rb_indices) {
  
-  pdcch pdcch;
+  nr::pdcch pdcch;
 
   coreset coreset_info_(0,48,1,"interleaved",6,2,102,102, 0, 14, 10, {8, 4, 2, 1, 0});
 
@@ -147,17 +147,17 @@ std::array <uint16_t,aggregation_level*18> pdcch_dmrs_indices_matlab_sib1_al4_ca
 
 /*Generating a PDCCH object with a CORESET object with the same info as in Matlab for SIB1 (no recording but SIB1 generated on Matlab)*/
 
-pdcch pdcch1;
+nr::pdcch pdcch1;
 
-pdcch pdcch2;
+nr::pdcch pdcch2;
 
-pdcch pdcch3;
+nr::pdcch pdcch3;
 
-pdcch pdcch4;
+nr::pdcch pdcch4;
 
-pdcch pdcch5;
+nr::pdcch pdcch5;
 
-pdcch pdcch6;
+nr::pdcch pdcch6;
 
 pdcch6.get_dmrs_sc_indices(aggregation_level, num_candidate, max_num_candidate, numSlot, user_search_space);
 

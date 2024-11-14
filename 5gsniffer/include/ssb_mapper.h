@@ -50,7 +50,7 @@ class ssb_mapper : public worker {
     void process(shared_ptr<vector<symbol>>& symbols, int64_t metadata) override;
 
     // Sublayers
-    pbch pbch;
+    nr::pbch pbch;
   private:
     shared_ptr<nr::phy> phy;
 };

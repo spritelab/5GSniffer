@@ -95,7 +95,7 @@ syncer::syncer(uint64_t sample_rate, shared_ptr<nr::phy> phy) :
   pss_window_size = std::floor((float)sample_rate /(float)(phy->ssb_bwp->scs) * 8);
  
   // Create pool of 64 flows that can process samples in parallel after synchronization
-  flow_pool = make_shared<class flow_pool>(64);
+  flow_pool = make_shared<nr::flow_pool>(64);
   this->connect(flow_pool);
 }
 
@@ -366,7 +366,7 @@ void syncer::on_mib_found(srsran_mib_nr_t& mib, bool found) {
   if (found == false){
     on_sync_lost();
   }else{
-  SPDLOG_INFO("Got MIB\nSSB \n Cell ID: {} \n MIB: SFN: {}, SCS: {} ",phy->get_cell_id(), mib.sfn, mib.scs_common);
+  SPDLOG_INFO("Got MIB\nSSB \n Cell ID: {} \n MIB: SFN: {}, SCS: {} ", phy->get_cell_id(), mib.sfn, (int)mib.scs_common);
   mib_id++;
   char mib_str[512] = {};
   srsran_pbch_msg_nr_mib_info(&mib, mib_str, sizeof(mib_str));

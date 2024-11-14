@@ -77,7 +77,7 @@ class syncer : public worker {
     int waiting_for_pss;
     int64_t counting_samples;
     float ssb_period;
-    shared_ptr<flow_pool> flow_pool;
+    shared_ptr<nr::flow_pool> flow_pool;
     uint8_t pss_start;
     uint8_t pss_end;
     int pss_window_size;

@@ -2,15 +2,16 @@
 #define SRSRAN_EXPORTS_H
 
 #include <srsran/srsran.h>
+#include <srsran/phy/phch/pbch_msg_nr.h>
 
 extern "C" {
 
-static int PBCH_NR_M = 432;
-static int PBCH_NR_E = 864;
-static int PBCH_NR_N = 1 << 9;
-static int PBCH_NR_A = SRSRAN_PBCH_MSG_NR_SZ + 8;
-static int PBCH_NR_CRC_LEN = 24;
-static int PBCH_NR_K = PBCH_NR_A + PBCH_NR_CRC_LEN;
+constexpr static int PBCH_NR_M = 432;
+constexpr static int PBCH_NR_E = 864;
+constexpr static int PBCH_NR_N = 1 << 9;
+constexpr static int PBCH_NR_A = SRSRAN_PBCH_MSG_NR_SZ + 8;
+constexpr static int PBCH_NR_CRC_LEN = 24;
+constexpr static int PBCH_NR_K = PBCH_NR_A + PBCH_NR_CRC_LEN;
 
 void pbch_nr_scramble(const srsran_pbch_nr_cfg_t* cfg, const uint8_t a[PBCH_NR_A], uint8_t a_prime[PBCH_NR_A]);
 void pbch_nr_scramble_rx(const srsran_pbch_nr_cfg_t* cfg,
