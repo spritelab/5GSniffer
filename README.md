@@ -64,9 +64,9 @@ git clone --recurse-submodules https://github.com/spritelab/5GSniffer.git
 cd 5GSniffer/5gsniffer
 mkdir -p build
 cd build
-export CXX=/usr/bin/clang++14
+export CXX=/usr/bin/clang++-14
 export CC=/usr/bin/clang-14
-cmake -DCMAKE_C_COMPILER=/usr/bin/clang-14 -DCMAKE_CXX_COMPILER=/usr/bin/clang++14 ..
+cmake -DCMAKE_C_COMPILER=/usr/bin/clang-14 -DCMAKE_CXX_COMPILER=/usr/bin/clang++-14 ..
 make -j 8
 ```
 
@@ -95,6 +95,38 @@ When using `clang`, replace the CMake command with the following:
 ```
 cmake -DCMAKE_C_COMPILER=/usr/bin/clang -DCMAKE_CXX_COMPILER=/usr/bin/clang++ ..
 ```
+
+#### Docker
+Docker can be used to build and run 5GSniffer on any distribution:
+
+Building:
+```
+docker build -t 5gsniffer:latest .
+```
+
+Running: 
+```
+docker run --mount=type=bind,source=/path-to-downloaded-samples-folder/,target=/5gsniffer/5gsniffer/test/samples/ -it 5gsniffer:latest 
+```
+
+This will spawn an interactive shell inside the container, at which point you can continue as described below.
+
+**Note for developers**: to make changes to the source code using the same build environment as the authors, you can clone the repository on your host machine and create a bind mount to the Docker container as such:
+
+```
+docker run --mount=type=bind,source=/path-to-your-projects-folder/5GSniffer,target=/5gsniffer --mount=type=bind,source=/path-to-downloaded-samples-folder/,target=/5gsniffer/5gsniffer/test/samples/ -it 5gsniffer:latest
+```
+
+Then, to build the project using the build environment inside the container:
+
+```
+# cd /5gsniffer/5gsniffer
+# mkdir build_docker
+# cd build_docker
+# cmake ..
+# make
+```
+
 
 ## Usage instructions
 
