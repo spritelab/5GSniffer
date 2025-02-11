@@ -1,10 +1,10 @@
 [sniffer]
-file_path = "../test/samples/srsRAN_octoclock_samprate_2304_10MHz_scscommon_15khz_b200_fdd_n71_pci_1_2phones_onevoicecall_oneyoutube_rntis_4601_4602_5seconds.fc32"
+#file_path = "../test/samples/srsRAN_octoclock_samprate_2304_10MHz_scscommon_15khz_b200_fdd_n71_pci_1_2phones_onevoicecall_oneyoutube_rntis_4601_4602_5seconds.fc32"
 sample_rate = 23040000
-frequency = 627750000
+frequency = 1842050000
 nid_1 = 1
 ssb_numerology = 0
-#rf_args = "type=b200,master_clock_rate=23.04e6"
+rf_args = "type=b200,master_clock_rate=23.04e6"
 
 #[[pdcch]]
 #si_dci_only = true
@@ -16,8 +16,8 @@ coreset_id = 1
 # As there is an offset of 150 KHz between SSB (to the fc we synch) and the DL_ARCFN,
 # the CBW is 52 RBs, and our CORESET is 48 RBs, we shift by 150KHz/15KHz + (52-48)*12(sc/RB)/2
 # divided by 2 because we are centered around SSB.
-subcarrier_offset = 34 
-num_prbs = 48
+subcarrier_offset = 40 
+num_prbs = 106
 numerology = 0
 dci_sizes_list = [39]
 scrambling_id_start = 1
