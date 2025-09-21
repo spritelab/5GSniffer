@@ -23,6 +23,7 @@
 #include "coreset.h"
 #include "dsp.h"
 #include "utils.h"
+#include "globals.h"
 #include <cstdint>
 #include <execution>
 #include <numeric>
@@ -525,6 +526,17 @@ int pdcch::decode_pdcch(symbol &symbol,
                 dci_.get_nof_bits(), sample_time + symbol_in_chunk * 0.001,
                 sample_time, symbol_in_chunk, symbol.slot_index,
                 symbol.symbol_index, dci_string, dci_.get_correlation());
+    
+    // Write to InfluxDB if client is available
+    if (influx_client_) {
+      influx_client_->write_dci_metrics(
+        dci_.get_rnti(),
+        dci_.get_found_aggregation_level(),
+        dci_.get_correlation(),
+        dci_.get_nof_bits(),
+        dci_string
+      );
+    }
   }
   srsran_pdcch_nr_free(&q);
   return res->crc;

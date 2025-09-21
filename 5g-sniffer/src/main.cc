@@ -27,9 +27,13 @@
 #include "sniffer.h"
 #include "spdlog/cfg/env.h"
 #include "spdlog/spdlog.h"
+#include "influx_client.h"
+#include "globals.h"
 
 using namespace std;
 extern struct config config;
+
+std::shared_ptr<DCIInfluxClient> influx_client_;
 
 static void usage() {
   cout << "Usage: 5g_sniffer <path_to_config.toml>" << endl;
@@ -68,6 +72,22 @@ int main(int argc, char **argv) {
   try {
     // Load the config
     config = config::load(config_path);
+
+    std::cout << "DEBUG: in MAIN before creation: " << influx_client_.get() << std::endl;
+    if (config.influxdb_enabled) {
+      std::cout << "--- InfluxDB is ENABLED. Creating Client... ---" << std::endl;
+      influx_client_ = std::make_shared<DCIInfluxClient>(
+        config.influxdb_url,
+        config.influxdb_port,
+        config.influxdb_org,
+        config.influxdb_token,
+        config.influxdb_bucket,
+        config.identifier
+      );
+    std::cout << "DEBUG: in MAIN after creation: " << influx_client_.get() << std::endl;
+    } else {
+      std::cout << "--- InfluxDB is DISABLED. Skipping client creating. ---" << std::endl;
+    }
 
     // Create sniffer
     if (config.file_path.compare("") == 0) {

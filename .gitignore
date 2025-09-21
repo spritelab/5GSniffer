@@ -1,2 +1,14 @@
-build
-iq_1842MHz_pdcch_traffic.fc32
+# Build directories
+build/
+.cache/
+
+# Data files
+data/
+outputs/
+*.fc32
+
+# Test configuration files
+iq_test.toml
+
+# other
+scripts/

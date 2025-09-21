@@ -65,6 +65,15 @@ struct config {
   uint8_t nid_2;
   string rf_args;
   uint16_t ssb_numerology;
+  
+  // InfluxDB configuration
+  bool        influxdb_enabled;
+  std::string influxdb_url;
+  uint32_t    influxdb_port;
+  std::string influxdb_org;
+  std::string influxdb_token;
+  std::string influxdb_bucket;
+  std::string identifier;
 
   vector<pdcch_config> pdcch_configs;
 
@@ -74,14 +83,23 @@ struct config {
     uint64_t default_sample_rate = 23040000;
     // Parse configuration file
     printf("Loading configuration file %s\n", config_path.c_str());
-    toml::table toml = toml::parse_file(config_path);
-    conf.file_path = toml["sniffer"]["file_path"].value_or(""sv).data();
-    conf.sample_rate =
-        toml["sniffer"]["sample_rate"].value_or(default_sample_rate);
-    conf.frequency = toml["sniffer"]["frequency"].value_or(default_frequency);
-    conf.nid_2 = toml["sniffer"]["nid_2"].value_or(4);
-    conf.rf_args = toml["sniffer"]["rf_args"].value_or(""sv).data();
+    toml::table toml    = toml::parse_file(config_path);
+    conf.file_path      = toml["sniffer"]["file_path"].value_or(""sv).data();
+    conf.sample_rate    = toml["sniffer"]["sample_rate"].value_or(default_sample_rate);
+    conf.frequency      = toml["sniffer"]["frequency"].value_or(default_frequency);
+    conf.nid_2          = toml["sniffer"]["nid_2"].value_or(4);
+    conf.rf_args        = toml["sniffer"]["rf_args"].value_or(""sv).data();
     conf.ssb_numerology = toml["sniffer"]["ssb_numerology"].value_or(0);
+
+    // InfluxDB config parsing
+    conf.influxdb_enabled = toml["influxdb"]["enabled"].value_or(false);
+    conf.influxdb_url     = toml["influxdb"]["url"].value_or("localhost"sv).data();
+    conf.influxdb_port    = toml["influxdb"]["port"].value_or(8086);
+    conf.influxdb_org     = toml["influxdb"]["org"].value_or(""sv).data();
+    conf.influxdb_token   = toml["influxdb"]["token"].value_or(""sv).data();
+    conf.influxdb_bucket  = toml["influxdb"]["bucket"].value_or("5g_sniffer"sv).data();
+    conf.identifier       = toml["influxdb"]["sniffer_id"].value_or("sniffer_001"sv);
+
     if (!toml["pdcch"].is_array_of_tables())
       throw config_exception(
           "PDCCH TOML config should be an array of tables, e.g. [[pdcch]]");

@@ -1,5 +1,5 @@
 [sniffer]
-file_path = "/home/oran-testbed/5g-sniffer/iq_1842MHz_pdcch_traffic.fc32"
+file_path = "data/gnb_ue_tr.fc32"
 sample_rate = 23040000
 frequency = 1842500000
 nid_1 = 1
@@ -21,3 +21,12 @@ interleaving_pattern = "non-interleaved"
 coreset_duration = 1
 AL_corr_thresholds = [1, 0.5, 0.5, 1, 1]
 num_candidates_per_AL = [0, 4, 4, 0, 0]
+
+[influxdb]
+enabled = false
+url = "http://localhost"
+port = 8086
+org = "ORG"
+token = "TOKEN"
+bucket = "5g_sniffer"
+sniffer_id = "sniffer_001"
