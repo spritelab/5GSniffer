@@ -44,6 +44,8 @@ static void usage() {
 int main(int argc, char** argv) {
   string config_path;
 
+  std::cout << "--- Custom 5GSniffer Version Starting ---" << std::endl;
+
   #ifdef DEBUG_BUILD
     SPDLOG_INFO("=== This is a debug mode build ===");
   #endif

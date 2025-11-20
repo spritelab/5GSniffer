@@ -1,0 +1,27 @@
+[sniffer]
+sample_rate = 23040000
+frequency = 625250000
+nid_1 = 1
+ssb_numerology = 0
+rf_args = "type=b200,master_clock_rate=23.04e6"
+serial = "337073B"
+
+[[pdcch]]
+coreset_id = 1
+subcarrier_offset = -126
+num_prbs = 48
+numerology = 0
+dci_sizes_list = [35,37,38]
+scrambling_id_start = 1
+scrambling_id_end = 30
+rnti_start = 17921
+rnti_end = 17950
+#rnti_start = 4601
+#rnti_end = 4601
+
+interleaving_pattern = "non-interleaved"
+coreset_duration = 2
+AL_corr_thresholds = [1, 0.5, 0.5, 1, 1]
+num_candidates_per_AL = [0, 8, 4, 0, 0]
+
+
